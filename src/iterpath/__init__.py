@@ -13,7 +13,7 @@ __url__          = 'https://github.com/jwodder/iterpath'
 from   operator import attrgetter
 import os
 from   pathlib  import Path
-from   typing   import Callable, Iterator, NamedTuple, Optional, \
+from   typing   import Any, Callable, Iterator, NamedTuple, Optional, \
                             TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
@@ -25,20 +25,29 @@ class DirEntries(NamedTuple):
 
 def iterpath(
     dirpath: Union[str, os.PathLike],
+    *,
     topdown: bool = True,
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
     sort_key: Optional[Callable[[os.DirEntry], "SupportsLessThan"]] = None,
     sort_reverse: bool = False,
+    filter_dirs: Optional[Callable[[os.DirEntry], Any]] = None,
+    filter_files: Optional[Callable[[os.DirEntry], Any]] = None,
 ) -> Iterator[Path]:
     if sort_key is not None:
         keyfunc = sort_key
     else:
         keyfunc = attrgetter("name")
 
+    def filter_entry(e: os.DirEntry) -> bool:
+        if e.is_dir():
+            return filter_dirs is None or bool(filter_dirs(e))
+        else:
+            return filter_files is None or bool(filter_files(e))
+
     def get_entries(p: Union[str, os.PathLike]) -> DirEntries:
-        entries: Iterator[os.DirEntry] = os.scandir(p)
+        entries: Iterator[os.DirEntry] = filter(filter_entry, os.scandir(p))
         if sort:
             entries = iter(sorted(entries, key=keyfunc, reverse=sort_reverse))
         return DirEntries(Path(p), entries)

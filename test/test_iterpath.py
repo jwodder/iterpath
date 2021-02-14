@@ -134,3 +134,55 @@ def test_simple_iterpath_sort_key_reverse():
         DATA_DIR / "dir01" / ".config",
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
     ]
+
+def test_simple_iterpath_sort_filter_dirs():
+    assert list(iterpath(
+        DATA_DIR / "dir01",
+        sort=True,
+        filter_dirs=lambda e: not e.name.startswith("."),
+    )) == [
+        DATA_DIR / "dir01" / ".hidden",
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+def test_simple_iterpath_sort_filter_files():
+    assert list(iterpath(
+        DATA_DIR / "dir01",
+        sort=True,
+        filter_files=lambda e: not e.name.startswith("."),
+    )) == [
+        DATA_DIR / "dir01" / ".config",
+        DATA_DIR / "dir01" / ".config" / "cfg.ini",
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+def test_simple_iterpath_sort_filter_dirs_and_files():
+    assert list(iterpath(
+        DATA_DIR / "dir01",
+        sort=True,
+        filter_dirs=lambda e: not e.name.startswith("."),
+        filter_files=lambda e: not e.name.startswith("f"),
+    )) == [
+        DATA_DIR / "dir01" / ".hidden",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
