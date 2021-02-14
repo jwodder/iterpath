@@ -217,7 +217,9 @@ def test_simple_iterpath_sort_delete_dirs_onerror_raise(tmp_path):
             paths.append(p)
             if p.is_dir():
                 rmtree(p)
-    assert excinfo.value.filename == str(dirpath / ".config")
+    # Apply `Path` to `.filename` to get something predictable, as it's a str
+    # on CPython but an os.DirEntry on PyPy:
+    assert Path(excinfo.value.filename) == dirpath / ".config"
     assert paths == [dirpath / ".config"]
 
 def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path):
