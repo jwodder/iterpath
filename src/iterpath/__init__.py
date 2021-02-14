@@ -34,6 +34,7 @@ def iterpath(
     sort_reverse: bool = False,
     filter_dirs: Optional[Callable[[os.DirEntry], Any]] = None,
     filter_files: Optional[Callable[[os.DirEntry], Any]] = None,
+    onerror: Optional[Callable[[OSError], Any]] = None,
 ) -> Iterator[Path]:
     if sort_key is not None:
         keyfunc = sort_key
@@ -47,9 +48,29 @@ def iterpath(
             return filter_files is None or bool(filter_files(e))
 
     def get_entries(p: Union[str, os.PathLike]) -> DirEntries:
-        entries: Iterator[os.DirEntry] = filter(filter_entry, os.scandir(p))
+        entries: Iterator[os.DirEntry]
+        try:
+            entries = os.scandir(p)
+        except OSError as exc:
+            if onerror is not None:
+                onerror(exc)
+            entries = iter([])
+        entries = filter(filter_entry, entries)
         if sort:
-            entries = iter(sorted(entries, key=keyfunc, reverse=sort_reverse))
+            entry_list = []
+            while True:
+                try:
+                    e = next(entries)
+                except StopIteration:
+                    break
+                except OSError as exc:
+                    if onerror is not None:
+                        onerror(exc)
+                    break
+                else:
+                    entry_list.append(e)
+            entry_list.sort(key=keyfunc, reverse=sort_reverse)
+            entries = iter(entry_list)
         return DirEntries(Path(p), entries)
 
     dirstack = [get_entries(dirpath)]
@@ -58,7 +79,9 @@ def iterpath(
     while dirstack:
         try:
             e = next(dirstack[-1].entries)
-        except StopIteration:
+        except (OSError, StopIteration) as exc:
+            if isinstance(exc, OSError) and onerror is not None:
+                onerror(exc)
             d = dirstack.pop()
             if dirs and not topdown and (dirstack or include_root):
                 yield d.dirpath

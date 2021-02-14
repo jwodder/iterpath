@@ -1,5 +1,7 @@
-from pathlib  import Path
-from iterpath import iterpath
+from   pathlib  import Path
+from   shutil   import copytree, rmtree
+import pytest
+from   iterpath import iterpath
 
 DATA_DIR = Path(__file__).with_name("data")
 
@@ -185,4 +187,62 @@ def test_simple_iterpath_sort_filter_dirs_and_files():
         DATA_DIR / "dir01" / "gnusto" / "quux",
         DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
         DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+def test_simple_iterpath_sort_delete_dirs(tmp_path):
+    dirpath = tmp_path / "dir"
+    copytree(DATA_DIR / "dir01", dirpath)
+    paths = []
+    for p in iterpath(dirpath, sort=True):
+        paths.append(p)
+        if p.is_dir():
+            rmtree(p)
+    assert paths == [
+        dirpath / ".config",
+        dirpath / ".hidden",
+        dirpath / "foo.txt",
+        dirpath / "glarch",
+        dirpath / "gnusto",
+        dirpath / "xyzzy.txt",
+    ]
+
+def test_simple_iterpath_sort_delete_dirs_onerror_raise(tmp_path):
+    def raise_(e):
+        raise e
+    dirpath = tmp_path / "dir"
+    copytree(DATA_DIR / "dir01", dirpath)
+    paths = []
+    with pytest.raises(OSError) as excinfo:
+        for p in iterpath(dirpath, sort=True, onerror=raise_):
+            paths.append(p)
+            if p.is_dir():
+                rmtree(p)
+    assert excinfo.value.filename == str(dirpath / ".config")
+    assert paths == [dirpath / ".config"]
+
+def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path):
+    error_files = []
+
+    def record(e):
+        error_files.append(Path(e.filename))
+
+    dirpath = tmp_path / "dir"
+    copytree(DATA_DIR / "dir01", dirpath)
+    paths = []
+    for p in iterpath(dirpath, sort=True, onerror=record):
+        paths.append(p)
+        if p.is_dir():
+            rmtree(p)
+    assert paths == [
+        dirpath / ".config",
+        dirpath / ".hidden",
+        dirpath / "foo.txt",
+        dirpath / "glarch",
+        dirpath / "gnusto",
+        dirpath / "xyzzy.txt",
+    ]
+    assert error_files == [
+        dirpath / ".config",
+        dirpath / "glarch",
+        dirpath / "gnusto",
     ]
