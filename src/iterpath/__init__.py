@@ -13,7 +13,11 @@ __url__          = 'https://github.com/jwodder/iterpath'
 from   operator import attrgetter
 import os
 from   pathlib  import Path
-from   typing   import Iterator, NamedTuple, Union
+from   typing   import Callable, Iterator, NamedTuple, Optional, \
+                            TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsLessThan
 
 class DirEntries(NamedTuple):
     dirpath: Path
@@ -25,12 +29,18 @@ def iterpath(
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
+    sort_key: Optional[Callable[[os.DirEntry], "SupportsLessThan"]] = None,
+    sort_reverse: bool = False,
 ) -> Iterator[Path]:
+    if sort_key is not None:
+        keyfunc = sort_key
+    else:
+        keyfunc = attrgetter("name")
 
     def get_entries(p: Union[str, os.PathLike]) -> DirEntries:
         entries: Iterator[os.DirEntry] = os.scandir(p)
         if sort:
-            entries = iter(sorted(entries, key=attrgetter("name")))
+            entries = iter(sorted(entries, key=keyfunc, reverse=sort_reverse))
         return DirEntries(Path(p), entries)
 
     dirstack = [get_entries(dirpath)]
