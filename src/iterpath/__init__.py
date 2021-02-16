@@ -35,6 +35,7 @@ def iterpath(
     filter_dirs: Optional[Callable[[os.DirEntry], Any]] = None,
     filter_files: Optional[Callable[[os.DirEntry], Any]] = None,
     onerror: Optional[Callable[[OSError], Any]] = None,
+    followlinks: bool = False,
 ) -> Iterator[Path]:
     if sort_key is not None:
         keyfunc = sort_key
@@ -42,7 +43,7 @@ def iterpath(
         keyfunc = attrgetter("name")
 
     def filter_entry(e: os.DirEntry) -> bool:
-        if e.is_dir():
+        if e.is_dir(follow_symlinks=followlinks):
             return filter_dirs is None or bool(filter_dirs(e))
         else:
             return filter_files is None or bool(filter_files(e))
@@ -86,7 +87,7 @@ def iterpath(
             if dirs and not topdown and (dirstack or include_root):
                 yield d.dirpath
             continue
-        if e.is_dir():
+        if e.is_dir(follow_symlinks=followlinks):
             if dirs and topdown:
                 yield Path(e)
             dirstack.append(get_entries(e))

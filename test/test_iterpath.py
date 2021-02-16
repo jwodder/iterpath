@@ -248,3 +248,50 @@ def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path):
         dirpath / "glarch",
         dirpath / "gnusto",
     ]
+
+@pytest.mark.parametrize('dirs', [True, False])
+def test_linked_iterpath_sort(dirs):
+    assert list(iterpath(DATA_DIR / "dir02", sort=True, dirs=dirs)) == [
+        DATA_DIR / "dir02" / "apple.txt",
+        DATA_DIR / "dir02" / "banana.txt",
+        DATA_DIR / "dir02" / "link",
+        DATA_DIR / "dir02" / "mango.txt",
+    ]
+
+def test_linked_iterpath_sort_followlinks():
+    assert list(iterpath(DATA_DIR / "dir02", sort=True, followlinks=True)) == [
+        DATA_DIR / "dir02" / "apple.txt",
+        DATA_DIR / "dir02" / "banana.txt",
+        DATA_DIR / "dir02" / "link",
+        DATA_DIR / "dir02" / "link" / ".config",
+        DATA_DIR / "dir02" / "link" / ".config" / "cfg.ini",
+        DATA_DIR / "dir02" / "link" / ".hidden",
+        DATA_DIR / "dir02" / "link" / "foo.txt",
+        DATA_DIR / "dir02" / "link" / "glarch",
+        DATA_DIR / "dir02" / "link" / "glarch" / "bar.txt",
+        DATA_DIR / "dir02" / "link" / "gnusto",
+        DATA_DIR / "dir02" / "link" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir02" / "link" / "gnusto" / "quux",
+        DATA_DIR / "dir02" / "link" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir02" / "link" / "xyzzy.txt",
+        DATA_DIR / "dir02" / "mango.txt",
+    ]
+
+def test_linked_iterpath_sort_followlinks_no_dirs():
+    assert list(iterpath(
+        DATA_DIR / "dir02",
+        sort=True,
+        followlinks=True,
+        dirs=False,
+    )) == [
+        DATA_DIR / "dir02" / "apple.txt",
+        DATA_DIR / "dir02" / "banana.txt",
+        DATA_DIR / "dir02" / "link" / ".config" / "cfg.ini",
+        DATA_DIR / "dir02" / "link" / ".hidden",
+        DATA_DIR / "dir02" / "link" / "foo.txt",
+        DATA_DIR / "dir02" / "link" / "glarch" / "bar.txt",
+        DATA_DIR / "dir02" / "link" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir02" / "link" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir02" / "link" / "xyzzy.txt",
+        DATA_DIR / "dir02" / "mango.txt",
+    ]
