@@ -38,6 +38,8 @@ def iterpath(
     sort_reverse: bool = False,
     filter_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     filter_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
+    exclude_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
+    exclude_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     onerror: Optional[Callable[[OSError], Any]] = None,
     followlinks: bool = False,
 ) -> Iterator[Path]:
@@ -48,9 +50,15 @@ def iterpath(
 
     def filter_entry(e: "os.DirEntry[AnyStr]") -> bool:
         if e.is_dir(follow_symlinks=followlinks):
-            return filter_dirs is None or bool(filter_dirs(e))
+            return (
+                (filter_dirs is None or bool(filter_dirs(e)))
+                and (exclude_dirs is None or not exclude_dirs(e))
+            )
         else:
-            return filter_files is None or bool(filter_files(e))
+            return (
+                (filter_files is None or bool(filter_files(e)))
+                and (exclude_files is None or not exclude_files(e))
+            )
 
     def get_entries(p: Union[AnyStr, "os.PathLike[AnyStr]"]) \
             -> DirEntries[AnyStr]:

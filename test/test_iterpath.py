@@ -190,6 +190,72 @@ def test_simple_iterpath_sort_filter_dirs_and_files():
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+def test_simple_iterpath_sort_exclude_dirs():
+    assert list(iterpath(
+        DATA_DIR / "dir01",
+        sort=True,
+        exclude_dirs=lambda e: e.name.startswith("."),
+    )) == [
+        DATA_DIR / "dir01" / ".hidden",
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+def test_simple_iterpath_sort_exclude_files():
+    assert list(iterpath(
+        DATA_DIR / "dir01",
+        sort=True,
+        exclude_files=lambda e: e.name.startswith("."),
+    )) == [
+        DATA_DIR / "dir01" / ".config",
+        DATA_DIR / "dir01" / ".config" / "cfg.ini",
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+def test_simple_iterpath_sort_exclude_dirs_and_files():
+    assert list(iterpath(
+        DATA_DIR / "dir01",
+        sort=True,
+        exclude_dirs=lambda e: e.name.startswith("."),
+        exclude_files=lambda e: e.name.startswith("f"),
+    )) == [
+        DATA_DIR / "dir01" / ".hidden",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files():
+    assert list(iterpath(
+        DATA_DIR / "dir03",
+        sort=True,
+        filter_files=lambda e: e.name.endswith(".txt"),
+        filter_dirs=lambda e: not e.name.startswith("_"),
+        exclude_dirs=lambda e: e.name.startswith("."),
+        exclude_files=lambda e: e.name.startswith("x"),
+    )) == [
+        DATA_DIR / "dir03" / "foo.txt",
+        DATA_DIR / "dir03" / "glarch",
+        DATA_DIR / "dir03" / "glarch" / "gnusto.txt",
+    ]
+
 def test_simple_iterpath_sort_delete_dirs(tmp_path):
     dirpath = tmp_path / "dir"
     copytree(DATA_DIR / "dir01", dirpath)
