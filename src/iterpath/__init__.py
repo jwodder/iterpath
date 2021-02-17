@@ -1,6 +1,12 @@
 """
 Iterate through a file tree
 
+``iterpath`` lets you iterate over a file tree as a single iterator of
+``pathlib.Path`` objects, eliminating the need to combine lists returned by
+``os.walk()`` or recursively call ``Path.iterdir()`` or ``os.scandir()``.
+Besides the standard ``os.walk()`` options, the library also includes options
+for sorting & filtering entries.
+
 Visit <https://github.com/jwodder/iterpath> for more information.
 """
 
