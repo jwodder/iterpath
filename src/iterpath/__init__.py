@@ -13,27 +13,31 @@ __url__          = 'https://github.com/jwodder/iterpath'
 from   operator import attrgetter
 import os
 from   pathlib  import Path
-from   typing   import Any, Callable, Iterator, NamedTuple, Optional, \
+from   typing   import Any, AnyStr, Callable, Generic, Iterator, Optional, \
                             TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from _typeshed import SupportsLessThan
 
-class DirEntries(NamedTuple):
-    dirpath: Path
-    entries: Iterator[os.DirEntry]
+class DirEntries(Generic[AnyStr]):
+    def __init__(self, dirpath: Path, entries: Iterator[os.DirEntry[AnyStr]]) \
+            -> None:
+        self.dirpath: Path = dirpath
+        self.entries: Iterator[os.DirEntry[AnyStr]] = entries
+
 
 def iterpath(
-    dirpath: Union[str, os.PathLike],
+    dirpath: Union[AnyStr, os.PathLike[AnyStr]],
     *,
     topdown: bool = True,
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
-    sort_key: Optional[Callable[[os.DirEntry], "SupportsLessThan"]] = None,
+    sort_key: Optional[Callable[[os.DirEntry[AnyStr]], "SupportsLessThan"]]
+        = None,
     sort_reverse: bool = False,
-    filter_dirs: Optional[Callable[[os.DirEntry], Any]] = None,
-    filter_files: Optional[Callable[[os.DirEntry], Any]] = None,
+    filter_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    filter_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
     onerror: Optional[Callable[[OSError], Any]] = None,
     followlinks: bool = False,
 ) -> Iterator[Path]:
@@ -42,14 +46,15 @@ def iterpath(
     else:
         keyfunc = attrgetter("name")
 
-    def filter_entry(e: os.DirEntry) -> bool:
+    def filter_entry(e: os.DirEntry[AnyStr]) -> bool:
         if e.is_dir(follow_symlinks=followlinks):
             return filter_dirs is None or bool(filter_dirs(e))
         else:
             return filter_files is None or bool(filter_files(e))
 
-    def get_entries(p: Union[str, os.PathLike]) -> DirEntries:
-        entries: Iterator[os.DirEntry]
+    def get_entries(p: Union[AnyStr, os.PathLike[AnyStr]]) \
+            -> DirEntries[AnyStr]:
+        entries: Iterator[os.DirEntry[AnyStr]]
         try:
             entries = os.scandir(p)
         except OSError as exc:
@@ -72,7 +77,7 @@ def iterpath(
                     entry_list.append(e)
             entry_list.sort(key=keyfunc, reverse=sort_reverse)
             entries = iter(entry_list)
-        return DirEntries(Path(p), entries)
+        return DirEntries(Path(os.fsdecode(p)), entries)
 
     dirstack = [get_entries(dirpath)]
     if include_root and topdown:
@@ -89,7 +94,7 @@ def iterpath(
             continue
         if e.is_dir(follow_symlinks=followlinks):
             if dirs and topdown:
-                yield Path(e)
+                yield Path(os.fsdecode(e))
             dirstack.append(get_entries(e))
         else:
-            yield Path(e)
+            yield Path(os.fsdecode(e))

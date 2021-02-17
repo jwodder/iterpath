@@ -1,4 +1,5 @@
 from   pathlib  import Path
+import platform
 from   shutil   import copytree, rmtree
 import pytest
 from   iterpath import iterpath
@@ -294,4 +295,23 @@ def test_linked_iterpath_sort_followlinks_no_dirs():
         DATA_DIR / "dir02" / "link" / "gnusto" / "quux" / "quism.txt",
         DATA_DIR / "dir02" / "link" / "xyzzy.txt",
         DATA_DIR / "dir02" / "mango.txt",
+    ]
+
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="bytes(Path) should only be used on POSIX",
+)
+def test_simple_iterpath_sort_bytes():
+    assert list(iterpath(bytes(DATA_DIR / "dir01"), sort=True)) == [
+        DATA_DIR / "dir01" / ".config",
+        DATA_DIR / "dir01" / ".config" / "cfg.ini",
+        DATA_DIR / "dir01" / ".hidden",
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
     ]
