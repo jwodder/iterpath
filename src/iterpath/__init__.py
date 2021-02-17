@@ -126,7 +126,9 @@ def iterpath(
             -> DirEntries[AnyStr]:
         entries: Iterator["os.DirEntry[AnyStr]"]
         try:
-            entries = os.scandir(p)
+            # Use fspath() here because PyPy on Windows (as of v7.3.3) requires
+            # a string:
+            entries = os.scandir(os.fspath(p))
         except OSError as exc:
             if onerror is not None:
                 onerror(exc)

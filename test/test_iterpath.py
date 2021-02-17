@@ -316,6 +316,10 @@ def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path):
         dirpath / "gnusto",
     ]
 
+@pytest.mark.xfail(
+    platform.python_implementation() == "PyPy",
+    reason='Symlinks are not handled properly on PyPy on Windows as of v7.3.3',
+)
 @pytest.mark.parametrize('dirs', [True, False])
 def test_linked_iterpath_sort(dirs):
     assert list(iterpath(DATA_DIR / "dir02", sort=True, dirs=dirs)) == [
