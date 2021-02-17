@@ -20,24 +20,24 @@ if TYPE_CHECKING:
     from _typeshed import SupportsLessThan
 
 class DirEntries(Generic[AnyStr]):
-    def __init__(self, dirpath: Path, entries: Iterator[os.DirEntry[AnyStr]]) \
+    def __init__(self, dirpath: Path, entries: Iterator["os.DirEntry[AnyStr]"])\
             -> None:
         self.dirpath: Path = dirpath
-        self.entries: Iterator[os.DirEntry[AnyStr]] = entries
+        self.entries: Iterator["os.DirEntry[AnyStr]"] = entries
 
 
 def iterpath(
-    dirpath: Union[AnyStr, os.PathLike[AnyStr]],
+    dirpath: Union[AnyStr, "os.PathLike[AnyStr]"],
     *,
     topdown: bool = True,
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
-    sort_key: Optional[Callable[[os.DirEntry[AnyStr]], "SupportsLessThan"]]
+    sort_key: Optional[Callable[["os.DirEntry[AnyStr]"], "SupportsLessThan"]]
         = None,
     sort_reverse: bool = False,
-    filter_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
-    filter_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    filter_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
+    filter_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     onerror: Optional[Callable[[OSError], Any]] = None,
     followlinks: bool = False,
 ) -> Iterator[Path]:
@@ -46,15 +46,15 @@ def iterpath(
     else:
         keyfunc = attrgetter("name")
 
-    def filter_entry(e: os.DirEntry[AnyStr]) -> bool:
+    def filter_entry(e: "os.DirEntry[AnyStr]") -> bool:
         if e.is_dir(follow_symlinks=followlinks):
             return filter_dirs is None or bool(filter_dirs(e))
         else:
             return filter_files is None or bool(filter_files(e))
 
-    def get_entries(p: Union[AnyStr, os.PathLike[AnyStr]]) \
+    def get_entries(p: Union[AnyStr, "os.PathLike[AnyStr]"]) \
             -> DirEntries[AnyStr]:
-        entries: Iterator[os.DirEntry[AnyStr]]
+        entries: Iterator["os.DirEntry[AnyStr]"]
         try:
             entries = os.scandir(p)
         except OSError as exc:
