@@ -25,6 +25,8 @@ from   typing   import Any, AnyStr, Callable, Generic, Iterator, Optional, \
 if TYPE_CHECKING:
     from _typeshed import SupportsLessThan
 
+__all__ = ["iterpath"]
+
 class DirEntries(Generic[AnyStr]):
     def __init__(self, dirpath: Path, entries: Iterator["os.DirEntry[AnyStr]"])\
             -> None:
@@ -49,6 +51,60 @@ def iterpath(
     onerror: Optional[Callable[[OSError], Any]] = None,
     followlinks: bool = False,
 ) -> Iterator[Path]:
+    """
+    Iterate through the file tree rooted at the directory ``dirpath`` in
+    depth-first order, yielding the files & directories within.  If ``dirpath``
+    is an absolute path, the generated `Path` objects will be absolute;
+    otherwise, if ``dirpath`` is a relative path, the ``Path`` objects will be
+    relative and will have ``dirpath`` as a prefix.
+
+    Note that, although `iterpath()` yields `pathlib.Path` objects, it operates
+    internally on `os.DirEntry` objects, and so any function supplied as the
+    ``sort_key`` parameter or as a filter/exclude parameter must accept
+    `os.DirEntry` instances.
+
+    :param dirpath: the directory over which to iterate
+    :param bool dirs: Whether to include directories in the output
+    :param bool topdown:
+        Whether to yield each directory before (`True`) or after (`False`) its
+        contents
+    :param bool include_root:
+        Whether to include the ``dirpath`` argument passed to `iterpath()` in
+        the output
+    :param bool followlinks:
+        Whether to treat a symlink to a directory as a directory
+    :param onerror:
+        Specify a function to be called whenever an `OSError` is encountered
+        while iterating over a directory.  If the function reraises the
+        exception, `iterpath()` aborts; otherwise, it continues with the next
+        directory.  By default, `OSError` exceptions are ignored.
+    :param bool sort:
+        Sort the entries in each directory.  When `False`, entries are yielded
+        in the order returned by `os.scandir()`.  When `True`, entries are
+        sorted, by default, by filename in ascending order, but this can be
+        changed via the ``sort_key`` and ``sort_reverse`` arguments.
+    :param sort_key:
+        Specify a custom key function for sorting directory entries.  Only has
+        an effect when ``sort`` is `True`.
+    :param bool sort_reverse:
+        Sort directory entries in reverse order.  Only has an effect when
+        ``sort`` is `True`.
+    :param filter_dirs:
+        Specify a predicate to be applied to all directories encountered; only
+        those for which the predicate returns a true value will be yielded &
+        descended into
+    :param filter_files:
+        Specify a predicate to be applied to all files encountered; only those
+        for which the predicate returns a true value will be yielded
+    :param exclude_dirs:
+        Specify a predicate to be applied to all directories encountered; only
+        those for which the predicate returns a false value will be yielded &
+        descended into
+    :param exclude_files:
+        Specify a predicate to be applied to all files encountered; only those
+        for which the predicate returns a false value will be yielded
+    """
+
     if sort_key is not None:
         keyfunc = sort_key
     else:
