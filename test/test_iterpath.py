@@ -41,6 +41,40 @@ def test_simple_iterpath_sort() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+def test_simple_iterpath_sort_relpath_curdir(monkeypatch: pytest.MonkeyPatch) \
+        -> None:
+    monkeypatch.chdir(DATA_DIR / "dir01")
+    assert list(iterpath(os.curdir, sort=True)) == [
+        Path(".config"),
+        Path(".config", "cfg.ini"),
+        Path(".hidden"),
+        Path("foo.txt"),
+        Path("glarch"),
+        Path("glarch", "bar.txt"),
+        Path("gnusto"),
+        Path("gnusto", "cleesh.txt"),
+        Path("gnusto", "quux"),
+        Path("gnusto", "quux", "quism.txt"),
+        Path("xyzzy.txt"),
+    ]
+
+def test_simple_iterpath_sort_relpath_prefix(monkeypatch: pytest.MonkeyPatch) \
+        -> None:
+    monkeypatch.chdir(DATA_DIR)
+    assert list(iterpath("dir01", sort=True)) == [
+        Path("dir01", ".config"),
+        Path("dir01", ".config", "cfg.ini"),
+        Path("dir01", ".hidden"),
+        Path("dir01", "foo.txt"),
+        Path("dir01", "glarch"),
+        Path("dir01", "glarch", "bar.txt"),
+        Path("dir01", "gnusto"),
+        Path("dir01", "gnusto", "cleesh.txt"),
+        Path("dir01", "gnusto", "quux"),
+        Path("dir01", "gnusto", "quux", "quism.txt"),
+        Path("dir01", "xyzzy.txt"),
+    ]
+
 def test_simple_iterpath_sort_no_dirs() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True, dirs=False)) == [
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
