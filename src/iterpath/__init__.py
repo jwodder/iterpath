@@ -103,6 +103,17 @@ def iterpath(
     :param exclude_files:
         Specify a predicate to be applied to all files encountered; only those
         for which the predicate returns a false value will be yielded
+
+    .. warning::
+
+        If ``dirpath`` is a relative path, changing the working directory while
+        `iterpath()` is in progress will lead to errors, or at least inaccurate
+        results.
+
+    .. warning::
+
+        Setting ``followlinks`` to `True` can result in infinite recursion if a
+        symlink points to a parent directory of itself.
     """
 
     if sort_key is not None:
