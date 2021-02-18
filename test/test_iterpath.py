@@ -26,6 +26,16 @@ def name_endswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
 def reverse_name(e: "os.DirEntry[str]") -> str:
     return e.name[::-1]
 
+@pytest.fixture
+def link_dir(tmp_path: Path) -> Path:
+    # Sdists don't preserve symlinks, so this directory can't be distributed
+    # the same way as the others.  Hence, we create it on-demand instead.
+    (tmp_path / "apple.txt").touch()
+    (tmp_path / "banana.txt").touch()
+    (tmp_path / "link").symlink_to(DATA_DIR / "dir01", target_is_directory=True)
+    (tmp_path / "mango.txt").touch()
+    return tmp_path
+
 def test_simple_iterpath_sort() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True)) == [
         DATA_DIR / "dir01" / ".config",
@@ -375,50 +385,50 @@ def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path) -> None
     reason='Symlinks are not handled properly on PyPy on Windows as of v7.3.3',
 )
 @pytest.mark.parametrize('dirs', [True, False])
-def test_linked_iterpath_sort(dirs: bool) -> None:
-    assert list(iterpath(DATA_DIR / "dir02", sort=True, dirs=dirs)) == [
-        DATA_DIR / "dir02" / "apple.txt",
-        DATA_DIR / "dir02" / "banana.txt",
-        DATA_DIR / "dir02" / "link",
-        DATA_DIR / "dir02" / "mango.txt",
+def test_linked_iterpath_sort(dirs: bool, link_dir: Path) -> None:
+    assert list(iterpath(link_dir, sort=True, dirs=dirs)) == [
+        link_dir / "apple.txt",
+        link_dir / "banana.txt",
+        link_dir / "link",
+        link_dir / "mango.txt",
     ]
 
-def test_linked_iterpath_sort_followlinks() -> None:
-    assert list(iterpath(DATA_DIR / "dir02", sort=True, followlinks=True)) == [
-        DATA_DIR / "dir02" / "apple.txt",
-        DATA_DIR / "dir02" / "banana.txt",
-        DATA_DIR / "dir02" / "link",
-        DATA_DIR / "dir02" / "link" / ".config",
-        DATA_DIR / "dir02" / "link" / ".config" / "cfg.ini",
-        DATA_DIR / "dir02" / "link" / ".hidden",
-        DATA_DIR / "dir02" / "link" / "foo.txt",
-        DATA_DIR / "dir02" / "link" / "glarch",
-        DATA_DIR / "dir02" / "link" / "glarch" / "bar.txt",
-        DATA_DIR / "dir02" / "link" / "gnusto",
-        DATA_DIR / "dir02" / "link" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir02" / "link" / "gnusto" / "quux",
-        DATA_DIR / "dir02" / "link" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir02" / "link" / "xyzzy.txt",
-        DATA_DIR / "dir02" / "mango.txt",
+def test_linked_iterpath_sort_followlinks(link_dir: Path) -> None:
+    assert list(iterpath(link_dir, sort=True, followlinks=True)) == [
+        link_dir / "apple.txt",
+        link_dir / "banana.txt",
+        link_dir / "link",
+        link_dir / "link" / ".config",
+        link_dir / "link" / ".config" / "cfg.ini",
+        link_dir / "link" / ".hidden",
+        link_dir / "link" / "foo.txt",
+        link_dir / "link" / "glarch",
+        link_dir / "link" / "glarch" / "bar.txt",
+        link_dir / "link" / "gnusto",
+        link_dir / "link" / "gnusto" / "cleesh.txt",
+        link_dir / "link" / "gnusto" / "quux",
+        link_dir / "link" / "gnusto" / "quux" / "quism.txt",
+        link_dir / "link" / "xyzzy.txt",
+        link_dir / "mango.txt",
     ]
 
-def test_linked_iterpath_sort_followlinks_no_dirs() -> None:
+def test_linked_iterpath_sort_followlinks_no_dirs(link_dir: Path) -> None:
     assert list(iterpath(
-        DATA_DIR / "dir02",
+        link_dir,
         sort=True,
         followlinks=True,
         dirs=False,
     )) == [
-        DATA_DIR / "dir02" / "apple.txt",
-        DATA_DIR / "dir02" / "banana.txt",
-        DATA_DIR / "dir02" / "link" / ".config" / "cfg.ini",
-        DATA_DIR / "dir02" / "link" / ".hidden",
-        DATA_DIR / "dir02" / "link" / "foo.txt",
-        DATA_DIR / "dir02" / "link" / "glarch" / "bar.txt",
-        DATA_DIR / "dir02" / "link" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir02" / "link" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir02" / "link" / "xyzzy.txt",
-        DATA_DIR / "dir02" / "mango.txt",
+        link_dir / "apple.txt",
+        link_dir / "banana.txt",
+        link_dir / "link" / ".config" / "cfg.ini",
+        link_dir / "link" / ".hidden",
+        link_dir / "link" / "foo.txt",
+        link_dir / "link" / "glarch" / "bar.txt",
+        link_dir / "link" / "gnusto" / "cleesh.txt",
+        link_dir / "link" / "gnusto" / "quux" / "quism.txt",
+        link_dir / "link" / "xyzzy.txt",
+        link_dir / "mango.txt",
     ]
 
 @pytest.mark.skipif(
