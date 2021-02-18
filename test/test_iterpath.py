@@ -393,6 +393,10 @@ def test_linked_iterpath_sort(dirs: bool, link_dir: Path) -> None:
         link_dir / "mango.txt",
     ]
 
+@pytest.mark.xfail(
+    platform.system() == "Windows" and platform.python_implementation() == "PyPy",
+    reason='Symlinks are not handled properly on PyPy on Windows as of v7.3.3',
+)
 def test_linked_iterpath_sort_followlinks(link_dir: Path) -> None:
     assert list(iterpath(link_dir, sort=True, followlinks=True)) == [
         link_dir / "apple.txt",
@@ -412,6 +416,10 @@ def test_linked_iterpath_sort_followlinks(link_dir: Path) -> None:
         link_dir / "mango.txt",
     ]
 
+@pytest.mark.xfail(
+    platform.system() == "Windows" and platform.python_implementation() == "PyPy",
+    reason='Symlinks are not handled properly on PyPy on Windows as of v7.3.3',
+)
 def test_linked_iterpath_sort_followlinks_no_dirs(link_dir: Path) -> None:
     assert list(iterpath(
         link_dir,
