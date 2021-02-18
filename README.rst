@@ -1,7 +1,7 @@
-.. image:: http://www.repostatus.org/badges/latest/wip.svg
-    :target: http://www.repostatus.org/#wip
-    :alt: Project Status: WIP — Initial development is in progress, but there
-          has not yet been a stable, usable release suitable for the public.
+.. image:: http://www.repostatus.org/badges/latest/active.svg
+    :target: http://www.repostatus.org/#active
+    :alt: Project Status: Active — The project has reached a stable, usable
+          state and is being actively developed.
 
 .. image:: https://github.com/jwodder/iterpath/workflows/Test/badge.svg?branch=master
     :target: https://github.com/jwodder/iterpath/actions?workflow=Test
@@ -10,11 +10,15 @@
 .. image:: https://codecov.io/gh/jwodder/iterpath/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/jwodder/iterpath
 
+.. image:: https://img.shields.io/pypi/pyversions/iterpath.svg
+    :target: https://pypi.org/project/iterpath/
+
 .. image:: https://img.shields.io/github/license/jwodder/iterpath.svg
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
 `GitHub <https://github.com/jwodder/iterpath>`_
+| `PyPI <https://pypi.org/project/iterpath/>`_
 | `Issues <https://github.com/jwodder/iterpath/issues>`_
 
 ``iterpath`` lets you iterate over a file tree as a single iterator of
@@ -27,8 +31,7 @@ for sorting & filtering entries.
 Installation
 ============
 ``iterpath`` requires Python 3.6 or higher.  Just use `pip
-<https://pip.pypa.io>`_ for Python 3 (You have pip, right?) to install
-``iterpath`` and its dependencies::
+<https://pip.pypa.io>`_ for Python 3 (You have pip, right?) to install it::
 
     python3 -m pip install iterpath
 
