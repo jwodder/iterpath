@@ -457,3 +457,20 @@ def test_simple_iterpath_sort_bytes() -> None:
         DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
+
+def test_simple_iterpath_sort_default_curdir(monkeypatch: pytest.MonkeyPatch) \
+        -> None:
+    monkeypatch.chdir(DATA_DIR / "dir01")
+    assert list(iterpath(sort=True)) == [
+        Path(".config"),
+        Path(".config", "cfg.ini"),
+        Path(".hidden"),
+        Path("foo.txt"),
+        Path("glarch"),
+        Path("glarch", "bar.txt"),
+        Path("gnusto"),
+        Path("gnusto", "cleesh.txt"),
+        Path("gnusto", "quux"),
+        Path("gnusto", "quux", "quism.txt"),
+        Path("xyzzy.txt"),
+    ]

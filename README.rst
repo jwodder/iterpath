@@ -20,6 +20,7 @@
 `GitHub <https://github.com/jwodder/iterpath>`_
 | `PyPI <https://pypi.org/project/iterpath/>`_
 | `Issues <https://github.com/jwodder/iterpath/issues>`_
+| `Changelog <https://github.com/jwodder/iterpath/blob/master/CHANGELOG.md>`_
 
 ``iterpath`` lets you iterate over a file tree as a single iterator of
 ``pathlib.Path`` objects, eliminating the need to combine lists returned by
@@ -83,13 +84,13 @@ The ``iterpath`` module provides a single function, also named ``iterpath``:
 
 .. code:: python
 
-    iterpath(dirpath: Union[AnyStr, os.PathLike[AnyStr]], **kwargs) -> Iterator[pathlib.Path]
+    iterpath(dirpath: Union[AnyStr, os.PathLike[AnyStr]] = os.curdir, **kwargs) -> Iterator[pathlib.Path]
 
-Iterate through the file tree rooted at the directory ``dirpath`` in
-depth-first order, yielding the files & directories within.  If ``dirpath`` is
-an absolute path, the generated ``Path`` objects will be absolute; otherwise,
-if ``dirpath`` is a relative path, the ``Path`` objects will be relative and
-will have ``dirpath`` as a prefix.
+Iterate through the file tree rooted at the directory ``dirpath`` (by default,
+the current directory) in depth-first order, yielding the files & directories
+within.  If ``dirpath`` is an absolute path, the generated ``Path`` objects
+will be absolute; otherwise, if ``dirpath`` is a relative path, the ``Path``
+objects will be relative and will have ``dirpath`` as a prefix.
 
 Note that, although ``iterpath()`` yields ``pathlib.Path`` objects, it operates
 internally on ``os.DirEntry`` objects, and so any function supplied as the

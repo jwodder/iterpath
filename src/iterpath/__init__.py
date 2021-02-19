@@ -10,7 +10,7 @@ for sorting & filtering entries.
 Visit <https://github.com/jwodder/iterpath> for more information.
 """
 
-__version__      = '0.1.0'
+__version__      = '0.2.0.dev1'
 __author__       = 'John Thorvald Wodder II'
 __author_email__ = 'iterpath@varonathe.org'
 __license__      = 'MIT'
@@ -20,7 +20,7 @@ from   operator import attrgetter
 import os
 from   pathlib  import Path
 from   typing   import Any, AnyStr, Callable, Generic, Iterator, Optional, \
-                            TYPE_CHECKING, Union
+                            TYPE_CHECKING, Union, cast
 
 if TYPE_CHECKING:
     from _typeshed import SupportsLessThan
@@ -35,7 +35,7 @@ class DirEntries(Generic[AnyStr]):
 
 
 def iterpath(
-    dirpath: Union[AnyStr, "os.PathLike[AnyStr]"],
+    dirpath: Union[AnyStr, "os.PathLike[AnyStr]", None] = None,
     *,
     topdown: bool = True,
     include_root: bool = False,
@@ -52,11 +52,12 @@ def iterpath(
     followlinks: bool = False,
 ) -> Iterator[Path]:
     """
-    Iterate through the file tree rooted at the directory ``dirpath`` in
-    depth-first order, yielding the files & directories within.  If ``dirpath``
-    is an absolute path, the generated `Path` objects will be absolute;
-    otherwise, if ``dirpath`` is a relative path, the ``Path`` objects will be
-    relative and will have ``dirpath`` as a prefix.
+    Iterate through the file tree rooted at the directory ``dirpath`` (by
+    default, the current directory) in depth-first order, yielding the files &
+    directories within.  If ``dirpath`` is an absolute path, the generated
+    `Path` objects will be absolute; otherwise, if ``dirpath`` is a relative
+    path, the `Path` objects will be relative and will have ``dirpath`` as a
+    prefix.
 
     Note that, although `iterpath()` yields `pathlib.Path` objects, it operates
     internally on `os.DirEntry` objects, and so any function supplied as the
@@ -115,6 +116,9 @@ def iterpath(
         Setting ``followlinks`` to `True` can result in infinite recursion if a
         symlink points to a parent directory of itself.
     """
+
+    if dirpath is None:
+        dirpath = cast(Union[AnyStr, "os.PathLike[AnyStr]"], os.curdir)
 
     if sort_key is not None:
         keyfunc = sort_key
