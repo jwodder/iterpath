@@ -382,7 +382,7 @@ def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path) -> None
 
 @pytest.mark.xfail(
     platform.system() == "Windows" and platform.python_implementation() == "PyPy",
-    reason='Symlinks are not handled properly on PyPy on Windows as of v7.3.3',
+    reason='Symlinks are not implemented on PyPy on Windows as of v7.3.3',
 )
 @pytest.mark.parametrize('dirs', [True, False])
 def test_linked_iterpath_sort(dirs: bool, link_dir: Path) -> None:
@@ -395,7 +395,7 @@ def test_linked_iterpath_sort(dirs: bool, link_dir: Path) -> None:
 
 @pytest.mark.xfail(
     platform.system() == "Windows" and platform.python_implementation() == "PyPy",
-    reason='Symlinks are not handled properly on PyPy on Windows as of v7.3.3',
+    reason='Symlinks are not implemented on PyPy on Windows as of v7.3.3',
 )
 def test_linked_iterpath_sort_followlinks(link_dir: Path) -> None:
     assert list(iterpath(link_dir, sort=True, followlinks=True)) == [
@@ -418,7 +418,7 @@ def test_linked_iterpath_sort_followlinks(link_dir: Path) -> None:
 
 @pytest.mark.xfail(
     platform.system() == "Windows" and platform.python_implementation() == "PyPy",
-    reason='Symlinks are not handled properly on PyPy on Windows as of v7.3.3',
+    reason='Symlinks are not implemented on PyPy on Windows as of v7.3.3',
 )
 def test_linked_iterpath_sort_followlinks_no_dirs(link_dir: Path) -> None:
     assert list(iterpath(
