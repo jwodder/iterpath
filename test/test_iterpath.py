@@ -36,6 +36,21 @@ def link_dir(tmp_path: Path) -> Path:
     (tmp_path / "mango.txt").touch()
     return tmp_path
 
+def test_simple_iterpath() -> None:
+    assert sorted(iterpath(DATA_DIR / "dir01")) == [
+        DATA_DIR / "dir01" / ".config",
+        DATA_DIR / "dir01" / ".config" / "cfg.ini",
+        DATA_DIR / "dir01" / ".hidden",
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
 def test_simple_iterpath_sort() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True)) == [
         DATA_DIR / "dir01" / ".config",
