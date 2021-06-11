@@ -1,30 +1,38 @@
 import os
-from   pathlib  import Path
+from pathlib import Path
 import platform
-from   shutil   import copytree, rmtree
-from   typing   import Callable, List
+from shutil import copytree, rmtree
+from typing import Callable, List
 import pytest
-from   iterpath import iterpath
+from iterpath import iterpath
 
 DATA_DIR = Path(__file__).with_name("data")
+
 
 def name_startswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
     def func(e: "os.DirEntry[str]") -> bool:
         return e.name.startswith(prefix)
+
     return func
+
 
 def not_name_startswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
     def func(e: "os.DirEntry[str]") -> bool:
         return not e.name.startswith(prefix)
+
     return func
+
 
 def name_endswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
     def func(e: "os.DirEntry[str]") -> bool:
         return e.name.endswith(prefix)
+
     return func
+
 
 def reverse_name(e: "os.DirEntry[str]") -> str:
     return e.name[::-1]
+
 
 @pytest.fixture
 def link_dir(tmp_path: Path) -> Path:
@@ -35,6 +43,7 @@ def link_dir(tmp_path: Path) -> Path:
     (tmp_path / "link").symlink_to(DATA_DIR / "dir01", target_is_directory=True)
     (tmp_path / "mango.txt").touch()
     return tmp_path
+
 
 def test_simple_iterpath() -> None:
     assert sorted(iterpath(DATA_DIR / "dir01")) == [
@@ -51,6 +60,7 @@ def test_simple_iterpath() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+
 def test_simple_iterpath_sort() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True)) == [
         DATA_DIR / "dir01" / ".config",
@@ -66,8 +76,8 @@ def test_simple_iterpath_sort() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
-def test_simple_iterpath_sort_relpath_curdir(monkeypatch: pytest.MonkeyPatch) \
-        -> None:
+
+def test_simple_iterpath_sort_relpath_curdir(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(DATA_DIR / "dir01")
     assert list(iterpath(os.curdir, sort=True)) == [
         Path(".config"),
@@ -83,8 +93,8 @@ def test_simple_iterpath_sort_relpath_curdir(monkeypatch: pytest.MonkeyPatch) \
         Path("xyzzy.txt"),
     ]
 
-def test_simple_iterpath_sort_relpath_prefix(monkeypatch: pytest.MonkeyPatch) \
-        -> None:
+
+def test_simple_iterpath_sort_relpath_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(DATA_DIR)
     assert list(iterpath("dir01", sort=True)) == [
         Path("dir01", ".config"),
@@ -100,6 +110,7 @@ def test_simple_iterpath_sort_relpath_prefix(monkeypatch: pytest.MonkeyPatch) \
         Path("dir01", "xyzzy.txt"),
     ]
 
+
 def test_simple_iterpath_sort_no_dirs() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True, dirs=False)) == [
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
@@ -110,6 +121,7 @@ def test_simple_iterpath_sort_no_dirs() -> None:
         DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
+
 
 def test_simple_iterpath_sort_no_topdown() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True, topdown=False)) == [
@@ -125,6 +137,7 @@ def test_simple_iterpath_sort_no_topdown() -> None:
         DATA_DIR / "dir01" / "gnusto",
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
+
 
 def test_simple_iterpath_sort_include_root() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True, include_root=True)) == [
@@ -142,13 +155,16 @@ def test_simple_iterpath_sort_include_root() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+
 def test_simple_iterpath_sort_include_root_no_topdown() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        include_root=True,
-        topdown=False,
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            include_root=True,
+            topdown=False,
+        )
+    ) == [
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
         DATA_DIR / "dir01" / ".config",
         DATA_DIR / "dir01" / ".hidden",
@@ -163,12 +179,9 @@ def test_simple_iterpath_sort_include_root_no_topdown() -> None:
         DATA_DIR / "dir01",
     ]
 
+
 def test_simple_iterpath_sort_key() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        sort_key=reverse_name,
-    )) == [
+    assert list(iterpath(DATA_DIR / "dir01", sort=True, sort_key=reverse_name,)) == [
         DATA_DIR / "dir01" / ".config",
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
         DATA_DIR / "dir01" / "glarch",
@@ -181,6 +194,7 @@ def test_simple_iterpath_sort_key() -> None:
         DATA_DIR / "dir01" / "foo.txt",
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
+
 
 def test_simple_iterpath_sort_reverse() -> None:
     assert list(iterpath(DATA_DIR / "dir01", sort=True, sort_reverse=True)) == [
@@ -197,13 +211,16 @@ def test_simple_iterpath_sort_reverse() -> None:
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
     ]
 
+
 def test_simple_iterpath_sort_key_reverse() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        sort_key=reverse_name,
-        sort_reverse=True,
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            sort_key=reverse_name,
+            sort_reverse=True,
+        )
+    ) == [
         DATA_DIR / "dir01" / "xyzzy.txt",
         DATA_DIR / "dir01" / "foo.txt",
         DATA_DIR / "dir01" / "gnusto",
@@ -216,13 +233,16 @@ def test_simple_iterpath_sort_key_reverse() -> None:
         DATA_DIR / "dir01" / ".config",
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
     ]
+
 
 def test_simple_iterpath_sort_filter_dirs() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        filter_dirs=not_name_startswith("."),
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            filter_dirs=not_name_startswith("."),
+        )
+    ) == [
         DATA_DIR / "dir01" / ".hidden",
         DATA_DIR / "dir01" / "foo.txt",
         DATA_DIR / "dir01" / "glarch",
@@ -233,13 +253,16 @@ def test_simple_iterpath_sort_filter_dirs() -> None:
         DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
+
 
 def test_simple_iterpath_sort_filter_files() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        filter_files=not_name_startswith("."),
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            filter_files=not_name_startswith("."),
+        )
+    ) == [
         DATA_DIR / "dir01" / ".config",
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
         DATA_DIR / "dir01" / "foo.txt",
@@ -251,14 +274,17 @@ def test_simple_iterpath_sort_filter_files() -> None:
         DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
+
 
 def test_simple_iterpath_sort_filter_dirs_and_files() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        filter_dirs=not_name_startswith("."),
-        filter_files=not_name_startswith("f"),
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            filter_dirs=not_name_startswith("."),
+            filter_files=not_name_startswith("f"),
+        )
+    ) == [
         DATA_DIR / "dir01" / ".hidden",
         DATA_DIR / "dir01" / "glarch",
         DATA_DIR / "dir01" / "glarch" / "bar.txt",
@@ -269,12 +295,15 @@ def test_simple_iterpath_sort_filter_dirs_and_files() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+
 def test_simple_iterpath_sort_exclude_dirs() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        exclude_dirs=name_startswith("."),
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            exclude_dirs=name_startswith("."),
+        )
+    ) == [
         DATA_DIR / "dir01" / ".hidden",
         DATA_DIR / "dir01" / "foo.txt",
         DATA_DIR / "dir01" / "glarch",
@@ -286,12 +315,15 @@ def test_simple_iterpath_sort_exclude_dirs() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+
 def test_simple_iterpath_sort_exclude_files() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        exclude_files=name_startswith("."),
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            exclude_files=name_startswith("."),
+        )
+    ) == [
         DATA_DIR / "dir01" / ".config",
         DATA_DIR / "dir01" / ".config" / "cfg.ini",
         DATA_DIR / "dir01" / "foo.txt",
@@ -304,13 +336,16 @@ def test_simple_iterpath_sort_exclude_files() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+
 def test_simple_iterpath_sort_exclude_dirs_and_files() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir01",
-        sort=True,
-        exclude_dirs=name_startswith("."),
-        exclude_files=name_startswith("f"),
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir01",
+            sort=True,
+            exclude_dirs=name_startswith("."),
+            exclude_files=name_startswith("f"),
+        )
+    ) == [
         DATA_DIR / "dir01" / ".hidden",
         DATA_DIR / "dir01" / "glarch",
         DATA_DIR / "dir01" / "glarch" / "bar.txt",
@@ -321,19 +356,23 @@ def test_simple_iterpath_sort_exclude_dirs_and_files() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
+
 def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files() -> None:
-    assert list(iterpath(
-        DATA_DIR / "dir03",
-        sort=True,
-        filter_files=name_endswith(".txt"),
-        filter_dirs=not_name_startswith("_"),
-        exclude_dirs=name_startswith("."),
-        exclude_files=name_startswith("x"),
-    )) == [
+    assert list(
+        iterpath(
+            DATA_DIR / "dir03",
+            sort=True,
+            filter_files=name_endswith(".txt"),
+            filter_dirs=not_name_startswith("_"),
+            exclude_dirs=name_startswith("."),
+            exclude_files=name_startswith("x"),
+        )
+    ) == [
         DATA_DIR / "dir03" / "foo.txt",
         DATA_DIR / "dir03" / "glarch",
         DATA_DIR / "dir03" / "glarch" / "gnusto.txt",
     ]
+
 
 def test_simple_iterpath_sort_delete_dirs(tmp_path: Path) -> None:
     dirpath = tmp_path / "dir"
@@ -352,9 +391,11 @@ def test_simple_iterpath_sort_delete_dirs(tmp_path: Path) -> None:
         dirpath / "xyzzy.txt",
     ]
 
+
 def test_simple_iterpath_sort_delete_dirs_onerror_raise(tmp_path: Path) -> None:
     def raise_(e: OSError) -> None:
         raise e
+
     dirpath = tmp_path / "dir"
     copytree(DATA_DIR / "dir01", dirpath)
     paths = []
@@ -367,6 +408,7 @@ def test_simple_iterpath_sort_delete_dirs_onerror_raise(tmp_path: Path) -> None:
     # on CPython but an os.DirEntry on PyPy:
     assert Path(excinfo.value.filename) == dirpath / ".config"
     assert paths == [dirpath / ".config"]
+
 
 def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path) -> None:
     error_files: List[Path] = []
@@ -395,11 +437,12 @@ def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path) -> None
         dirpath / "gnusto",
     ]
 
+
 @pytest.mark.xfail(
     platform.system() == "Windows" and platform.python_implementation() == "PyPy",
-    reason='Symlinks are not implemented on PyPy on Windows as of v7.3.3',
+    reason="Symlinks are not implemented on PyPy on Windows as of v7.3.3",
 )
-@pytest.mark.parametrize('dirs', [True, False])
+@pytest.mark.parametrize("dirs", [True, False])
 def test_linked_iterpath_sort(dirs: bool, link_dir: Path) -> None:
     assert list(iterpath(link_dir, sort=True, dirs=dirs)) == [
         link_dir / "apple.txt",
@@ -408,9 +451,10 @@ def test_linked_iterpath_sort(dirs: bool, link_dir: Path) -> None:
         link_dir / "mango.txt",
     ]
 
+
 @pytest.mark.xfail(
     platform.system() == "Windows" and platform.python_implementation() == "PyPy",
-    reason='Symlinks are not implemented on PyPy on Windows as of v7.3.3',
+    reason="Symlinks are not implemented on PyPy on Windows as of v7.3.3",
 )
 def test_linked_iterpath_sort_followlinks(link_dir: Path) -> None:
     assert list(iterpath(link_dir, sort=True, followlinks=True)) == [
@@ -431,17 +475,13 @@ def test_linked_iterpath_sort_followlinks(link_dir: Path) -> None:
         link_dir / "mango.txt",
     ]
 
+
 @pytest.mark.xfail(
     platform.system() == "Windows" and platform.python_implementation() == "PyPy",
-    reason='Symlinks are not implemented on PyPy on Windows as of v7.3.3',
+    reason="Symlinks are not implemented on PyPy on Windows as of v7.3.3",
 )
 def test_linked_iterpath_sort_followlinks_no_dirs(link_dir: Path) -> None:
-    assert list(iterpath(
-        link_dir,
-        sort=True,
-        followlinks=True,
-        dirs=False,
-    )) == [
+    assert list(iterpath(link_dir, sort=True, followlinks=True, dirs=False,)) == [
         link_dir / "apple.txt",
         link_dir / "banana.txt",
         link_dir / "link" / ".config" / "cfg.ini",
@@ -453,6 +493,7 @@ def test_linked_iterpath_sort_followlinks_no_dirs(link_dir: Path) -> None:
         link_dir / "link" / "xyzzy.txt",
         link_dir / "mango.txt",
     ]
+
 
 @pytest.mark.skipif(
     platform.system() == "Windows",
@@ -473,8 +514,8 @@ def test_simple_iterpath_sort_bytes() -> None:
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
 
-def test_simple_iterpath_sort_default_curdir(monkeypatch: pytest.MonkeyPatch) \
-        -> None:
+
+def test_simple_iterpath_sort_default_curdir(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(DATA_DIR / "dir01")
     assert list(iterpath(sort=True)) == [
         Path(".config"),

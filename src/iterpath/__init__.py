@@ -10,26 +10,35 @@ for sorting & filtering entries.
 Visit <https://github.com/jwodder/iterpath> for more information.
 """
 
-__version__      = '0.2.0'
-__author__       = 'John Thorvald Wodder II'
-__author_email__ = 'iterpath@varonathe.org'
-__license__      = 'MIT'
-__url__          = 'https://github.com/jwodder/iterpath'
+__version__ = "0.2.0"
+__author__ = "John Thorvald Wodder II"
+__author_email__ = "iterpath@varonathe.org"
+__license__ = "MIT"
+__url__ = "https://github.com/jwodder/iterpath"
 
-from   operator import attrgetter
+from operator import attrgetter
 import os
-from   pathlib  import Path
-from   typing   import Any, AnyStr, Callable, Generic, Iterator, Optional, \
-                            TYPE_CHECKING, Union, cast
+from pathlib import Path
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    Generic,
+    Iterator,
+    Optional,
+    TYPE_CHECKING,
+    Union,
+    cast,
+)
 
 if TYPE_CHECKING:
     from _typeshed import SupportsLessThan
 
 __all__ = ["iterpath"]
 
+
 class DirEntries(Generic[AnyStr]):
-    def __init__(self, dirpath: Path, entries: Iterator["os.DirEntry[AnyStr]"])\
-            -> None:
+    def __init__(self, dirpath: Path, entries: Iterator["os.DirEntry[AnyStr]"]) -> None:
         self.dirpath: Path = dirpath
         self.entries: Iterator["os.DirEntry[AnyStr]"] = entries
 
@@ -41,8 +50,7 @@ def iterpath(
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
-    sort_key: Optional[Callable[["os.DirEntry[AnyStr]"], "SupportsLessThan"]]
-        = None,
+    sort_key: Optional[Callable[["os.DirEntry[AnyStr]"], "SupportsLessThan"]] = None,
     sort_reverse: bool = False,
     filter_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     filter_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
@@ -127,18 +135,15 @@ def iterpath(
 
     def filter_entry(e: "os.DirEntry[AnyStr]") -> bool:
         if e.is_dir(follow_symlinks=followlinks):
-            return (
-                (filter_dirs is None or bool(filter_dirs(e)))
-                and (exclude_dirs is None or not exclude_dirs(e))
+            return (filter_dirs is None or bool(filter_dirs(e))) and (
+                exclude_dirs is None or not exclude_dirs(e)
             )
         else:
-            return (
-                (filter_files is None or bool(filter_files(e)))
-                and (exclude_files is None or not exclude_files(e))
+            return (filter_files is None or bool(filter_files(e))) and (
+                exclude_files is None or not exclude_files(e)
             )
 
-    def get_entries(p: Union[AnyStr, "os.PathLike[AnyStr]"]) \
-            -> DirEntries[AnyStr]:
+    def get_entries(p: Union[AnyStr, "os.PathLike[AnyStr]"]) -> DirEntries[AnyStr]:
         entries: Iterator["os.DirEntry[AnyStr]"]
         try:
             # Use fspath() here because PyPy on Windows (as of v7.3.3) requires
