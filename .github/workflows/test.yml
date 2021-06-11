@@ -25,6 +25,9 @@ jobs:
         toxenv: [py]
         include:
           - python-version: '3.6'
+            toxenv: lint
+            os: ubuntu-latest
+          - python-version: '3.6'
             toxenv: typing
             os: ubuntu-latest
     steps:
