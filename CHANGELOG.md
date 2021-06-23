@@ -1,6 +1,8 @@
 v0.3.0 (in development)
 -----------------------
 - Add `filter` and `exclude` arguments
+- Add `SelectNames`, `SelectGlob`, `SelectRegex`, and `SELECT_DOTS` for easy
+  filtering by filename
 
 v0.2.0 (2021-02-19)
 -------------------

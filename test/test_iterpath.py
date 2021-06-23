@@ -4,7 +4,7 @@ import platform
 from shutil import copytree, rmtree
 from typing import Callable, List
 import pytest
-from iterpath import iterpath
+from iterpath import SELECT_DOTS, iterpath
 
 DATA_DIR = Path(__file__).with_name("data")
 
@@ -400,6 +400,19 @@ def test_simple_iterpath_sort_exclude() -> None:
     assert list(
         iterpath(DATA_DIR / "dir01", sort=True, exclude=name_startswith("."))
     ) == [
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+
+def test_simple_iterpath_sort_exclude_selector() -> None:
+    assert list(iterpath(DATA_DIR / "dir01", sort=True, exclude=SELECT_DOTS)) == [
         DATA_DIR / "dir01" / "foo.txt",
         DATA_DIR / "dir01" / "glarch",
         DATA_DIR / "dir01" / "glarch" / "bar.txt",

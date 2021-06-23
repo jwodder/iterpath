@@ -16,18 +16,24 @@ __author_email__ = "iterpath@varonathe.org"
 __license__ = "MIT"
 __url__ = "https://github.com/jwodder/iterpath"
 
+from abc import ABC, abstractmethod
 import builtins
 from dataclasses import dataclass
+from fnmatch import fnmatch
 from operator import attrgetter
 import os
 from pathlib import Path
+import re
 from typing import (
     Any,
     AnyStr,
     Callable,
     Generic,
     Iterator,
+    List,
     Optional,
+    Pattern,
+    Set,
     TYPE_CHECKING,
     Union,
     cast,
@@ -36,7 +42,15 @@ from typing import (
 if TYPE_CHECKING:
     from _typeshed import SupportsLessThan
 
-__all__ = ["iterpath"]
+__all__ = [
+    "SELECT_DOTS",
+    "SelectAny",
+    "SelectGlob",
+    "SelectNames",
+    "SelectRegex",
+    "Selector",
+    "iterpath",
+]
 
 
 @dataclass
@@ -233,3 +247,64 @@ def iterpath(
             dirstack.append(get_entries(e))
         else:
             yield Path(os.fsdecode(e))
+
+
+class Selector(ABC, Generic[AnyStr]):
+    @abstractmethod
+    def __call__(self, _entry: "os.DirEntry[AnyStr]") -> bool:
+        ...
+
+    def __or__(self, other: "Selector") -> "SelectAny":
+        parts: List[Selector] = []
+        for s in [self, other]:
+            if isinstance(s, SelectAny):
+                parts.extend(s.selectors)
+            else:
+                parts.append(s)
+        return SelectAny(parts)
+
+
+@dataclass
+class SelectAny(Selector[AnyStr]):
+    selectors: List[Selector[AnyStr]]
+
+    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+        return any(s(entry) for s in self.selectors)
+
+
+class SelectNames(Selector[AnyStr]):
+    def __init__(self, *names: AnyStr) -> None:
+        self.names: Set[AnyStr] = set(names)
+
+    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+        return entry.name in self.names
+
+    def __repr__(self) -> str:
+        return "{}({})".format(
+            type(self).__name__, ", ".join(map(repr, sorted(self.names)))
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, SelectNames):
+            return self.names == other.names
+        else:
+            return NotImplemented
+
+
+@dataclass
+class SelectRegex(Selector[AnyStr]):
+    pattern: Union[AnyStr, "Pattern[AnyStr]"]
+
+    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+        return bool(re.search(self.pattern, entry.name))
+
+
+@dataclass
+class SelectGlob(Selector[AnyStr]):
+    pattern: AnyStr
+
+    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+        return fnmatch(entry.name, self.pattern)
+
+
+SELECT_DOTS = SelectGlob(".*")
