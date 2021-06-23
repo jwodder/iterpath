@@ -296,6 +296,45 @@ def test_simple_iterpath_sort_filter_dirs_and_files() -> None:
     ]
 
 
+def test_simple_iterpath_sort_filter() -> None:
+    assert list(
+        iterpath(DATA_DIR / "dir01", sort=True, filter=not_name_startswith("."))
+    ) == [
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+
+def test_simple_iterpath_filter_filter_dirs() -> None:
+    with pytest.raises(TypeError) as excinfo:
+        list(
+            iterpath(
+                DATA_DIR / "dir01",
+                filter=not_name_startswith("."),
+                filter_dirs=not_name_startswith("f"),
+            )
+        )
+    assert str(excinfo.value) == "filter and filter_dirs are mutually exclusive"
+
+
+def test_simple_iterpath_filter_filter_files() -> None:
+    with pytest.raises(TypeError) as excinfo:
+        list(
+            iterpath(
+                DATA_DIR / "dir01",
+                filter=not_name_startswith("."),
+                filter_files=not_name_startswith("f"),
+            )
+        )
+    assert str(excinfo.value) == "filter and filter_files are mutually exclusive"
+
+
 def test_simple_iterpath_sort_exclude_dirs() -> None:
     assert list(
         iterpath(
@@ -355,6 +394,45 @@ def test_simple_iterpath_sort_exclude_dirs_and_files() -> None:
         DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
         DATA_DIR / "dir01" / "xyzzy.txt",
     ]
+
+
+def test_simple_iterpath_sort_exclude() -> None:
+    assert list(
+        iterpath(DATA_DIR / "dir01", sort=True, exclude=name_startswith("."))
+    ) == [
+        DATA_DIR / "dir01" / "foo.txt",
+        DATA_DIR / "dir01" / "glarch",
+        DATA_DIR / "dir01" / "glarch" / "bar.txt",
+        DATA_DIR / "dir01" / "gnusto",
+        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
+        DATA_DIR / "dir01" / "gnusto" / "quux",
+        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
+        DATA_DIR / "dir01" / "xyzzy.txt",
+    ]
+
+
+def test_simple_iterpath_exclude_exclude_dirs() -> None:
+    with pytest.raises(TypeError) as excinfo:
+        list(
+            iterpath(
+                DATA_DIR / "dir01",
+                exclude=name_startswith("."),
+                exclude_dirs=name_startswith("f"),
+            )
+        )
+    assert str(excinfo.value) == "exclude and exclude_dirs are mutually exclusive"
+
+
+def test_simple_iterpath_exclude_exclude_files() -> None:
+    with pytest.raises(TypeError) as excinfo:
+        list(
+            iterpath(
+                DATA_DIR / "dir01",
+                exclude=name_startswith("."),
+                exclude_files=name_startswith("f"),
+            )
+        )
+    assert str(excinfo.value) == "exclude and exclude_files are mutually exclusive"
 
 
 def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files() -> None:

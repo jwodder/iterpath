@@ -133,6 +133,14 @@ Keyword arguments:
     Sort directory entries in reverse order.  Only has an effect when ``sort``
     is ``True``.
 
+``filter: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None``
+    Specify a predicate to be applied to all files & directories encountered;
+    only those for which the predicate returns a true value will be yielded
+    (and, for directories, descended into).
+
+    If ``filter`` is specified, it is an error to also specify ``filter_dirs``
+    or ``filter_files``.
+
 ``filter_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None``
     Specify a predicate to be applied to all directories encountered; only
     those for which the predicate returns a true value will be yielded &
@@ -141,6 +149,14 @@ Keyword arguments:
 ``filter_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None``
     Specify a predicate to be applied to all files encountered; only those for
     which the predicate returns a true value will be yielded
+
+``exclude: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None``
+    Specify a predicate to be applied to all files & directories encountered;
+    only those for which the predicate returns a false value will be yielded
+    (and, for directories, descended into).
+
+    If ``exclude`` is specified, it is an error to also specify ``exclude_dirs``
+    or ``exclude_files``.
 
 ``exclude_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None``
     Specify a predicate to be applied to all directories encountered; only
@@ -151,9 +167,10 @@ Keyword arguments:
     Specify a predicate to be applied to all files encountered; only those for
     which the predicate returns a false value will be yielded
 
-If both ``filter_dirs`` and ``exclude_dirs`` are set, a given directory will
-only be included if ``filter_dirs`` returns true and ``exclude_dirs`` returns
-false, and likewise for files.
+If both ``filter`` and ``exclude`` are set, a given entry will only be included
+if ``filter`` returns true and ``exclude`` returns false (that is, exclusions
+take priority over inclusions), and likewise for the directory- and
+file-specific arguments.
 
 **Warnings:**
 

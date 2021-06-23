@@ -10,12 +10,13 @@ for sorting & filtering entries.
 Visit <https://github.com/jwodder/iterpath> for more information.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "iterpath@varonathe.org"
 __license__ = "MIT"
 __url__ = "https://github.com/jwodder/iterpath"
 
+import builtins
 from operator import attrgetter
 import os
 from pathlib import Path
@@ -52,8 +53,10 @@ def iterpath(
     sort: bool = False,
     sort_key: Optional[Callable[["os.DirEntry[AnyStr]"], "SupportsLessThan"]] = None,
     sort_reverse: bool = False,
+    filter: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     filter_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     filter_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
+    exclude: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     exclude_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     exclude_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     onerror: Optional[Callable[[OSError], Any]] = None,
@@ -98,6 +101,13 @@ def iterpath(
     :param bool sort_reverse:
         Sort directory entries in reverse order.  Only has an effect when
         ``sort`` is `True`.
+    :param filter:
+        Specify a predicate to be applied to all files & directories
+        encountered; only those for which the predicate returns a true value
+        will be yielded (and, for directories, descended into).
+
+        If ``filter`` is specified, it is an error to also specify
+        ``filter_dirs`` or ``filter_files``.
     :param filter_dirs:
         Specify a predicate to be applied to all directories encountered; only
         those for which the predicate returns a true value will be yielded &
@@ -105,6 +115,13 @@ def iterpath(
     :param filter_files:
         Specify a predicate to be applied to all files encountered; only those
         for which the predicate returns a true value will be yielded
+    :param exclude:
+        Specify a predicate to be applied to all files & directories
+        encountered; only those for which the predicate returns a false value
+        will be yielded (and, for directories, descended into).
+
+        If ``exclude`` is specified, it is an error to also specify
+        ``exclude_dirs`` or ``exclude_files``.
     :param exclude_dirs:
         Specify a predicate to be applied to all directories encountered; only
         those for which the predicate returns a false value will be yielded &
@@ -113,9 +130,10 @@ def iterpath(
         Specify a predicate to be applied to all files encountered; only those
         for which the predicate returns a false value will be yielded
 
-    If both ``filter_dirs`` and ``exclude_dirs`` are set, a given directory
-    will only be included if ``filter_dirs`` returns true and ``exclude_dirs``
-    returns false, and likewise for files.
+    If both ``filter`` and ``exclude`` are set, a given entry will only be
+    included if ``filter`` returns true and ``exclude`` returns false (that is,
+    exclusions take priority over inclusions), and likewise for the directory-
+    and file-specific arguments.
 
     .. warning::
 
@@ -137,6 +155,26 @@ def iterpath(
     else:
         keyfunc = attrgetter("name")
 
+    if filter is not None and filter_dirs is not None:
+        raise TypeError("filter and filter_dirs are mutually exclusive")
+    elif filter is not None:
+        filter_dirs = filter
+
+    if filter is not None and filter_files is not None:
+        raise TypeError("filter and filter_files are mutually exclusive")
+    elif filter is not None:
+        filter_files = filter
+
+    if exclude is not None and exclude_dirs is not None:
+        raise TypeError("exclude and exclude_dirs are mutually exclusive")
+    elif exclude is not None:
+        exclude_dirs = exclude
+
+    if exclude is not None and exclude_files is not None:
+        raise TypeError("exclude and exclude_files are mutually exclusive")
+    elif exclude is not None:
+        exclude_files = exclude
+
     def filter_entry(e: "os.DirEntry[AnyStr]") -> bool:
         if e.is_dir(follow_symlinks=followlinks):
             return (filter_dirs is None or bool(filter_dirs(e))) and (
@@ -157,7 +195,7 @@ def iterpath(
             if onerror is not None:
                 onerror(exc)
             entries = iter([])
-        entries = filter(filter_entry, entries)
+        entries = builtins.filter(filter_entry, entries)
         if sort:
             entry_list = []
             while True:
