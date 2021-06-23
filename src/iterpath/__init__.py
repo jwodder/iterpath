@@ -44,6 +44,9 @@ if TYPE_CHECKING:
 
 __all__ = [
     "SELECT_DOTS",
+    "SELECT_VCS",
+    "SELECT_VCS_DIRS",
+    "SELECT_VCS_FILES",
     "SelectAny",
     "SelectGlob",
     "SelectNames",
@@ -308,3 +311,25 @@ class SelectGlob(Selector[AnyStr]):
 
 
 SELECT_DOTS = SelectGlob(".*")
+
+SELECT_VCS_DIRS = SelectNames(
+    ".git", ".hg", "_darcs", ".bzr", ".svn", "_svn", "CVS", "RCS"
+)
+
+SELECT_VCS_FILES = (
+    SelectNames(
+        ".gitattributes",
+        ".gitignore",
+        ".gitmodules",
+        ".mailmap",
+        ".hgignore",
+        ".hgsigs",
+        ".hgtags",
+        ".binaries",
+        ".boring",
+        ".bzrignore",
+    )
+    | SelectGlob("?*,v")
+)
+
+SELECT_VCS = SELECT_VCS_DIRS | SELECT_VCS_FILES

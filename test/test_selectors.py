@@ -1,6 +1,15 @@
 from unittest.mock import Mock
 import pytest
-from iterpath import SELECT_DOTS, SelectAny, SelectGlob, SelectNames, SelectRegex
+from iterpath import (
+    SELECT_DOTS,
+    SELECT_VCS,
+    SELECT_VCS_DIRS,
+    SELECT_VCS_FILES,
+    SelectAny,
+    SelectGlob,
+    SelectNames,
+    SelectRegex,
+)
 
 
 @pytest.mark.parametrize(
@@ -145,3 +154,105 @@ def test_or_or() -> None:
     sor2 = s3 | s4
     sor = sor1 | sor2
     assert sor == SelectAny([s1, s2, s3, s4])
+
+
+@pytest.mark.parametrize(
+    "name,r",
+    [
+        (".git", True),
+        ("git", False),
+        ("_git", False),
+        (".gitignore", False),
+        ("foo.git", False),
+        (".hg", True),
+        ("_darcs", True),
+        (".darcs", False),
+        (".bzr", True),
+        (".svn", True),
+        ("_svn", True),
+        ("CVS", True),
+        ("cvs", False),
+        (".cvs", False),
+        ("RCS", True),
+        ("rcs", False),
+        (".rcs", False),
+        ("foo.txt", False),
+    ],
+)
+def test_select_vcs_dirs(name: str, r: bool) -> None:
+    entry = Mock()
+    entry.configure_mock(name=name)
+    assert SELECT_VCS_DIRS(entry) is r
+
+
+@pytest.mark.parametrize(
+    "name,r",
+    [
+        (".git", False),
+        (".gitattributes", True),
+        (".gitignore", True),
+        ("_gitignore", False),
+        (".gitmodules", True),
+        (".gitfoo", False),
+        (".mailmap", True),
+        (".gitmailmap", False),
+        (".hgignore", True),
+        (".hgsigs", True),
+        (".hgtags", True),
+        (".binaries", True),
+        (".boring", True),
+        (".bzrignore", True),
+        ("foo.txt,v", True),
+        (",v", False),
+        (".gitignore,v", True),
+        ("foo.txt", False),
+    ],
+)
+def test_select_vcs_files(name: str, r: bool) -> None:
+    entry = Mock()
+    entry.configure_mock(name=name)
+    assert SELECT_VCS_FILES(entry) is r
+
+
+@pytest.mark.parametrize(
+    "name,r",
+    [
+        (".git", True),
+        ("git", False),
+        ("_git", False),
+        ("foo.git", False),
+        (".hg", True),
+        ("_darcs", True),
+        (".darcs", False),
+        (".bzr", True),
+        (".svn", True),
+        ("_svn", True),
+        ("CVS", True),
+        ("cvs", False),
+        (".cvs", False),
+        ("RCS", True),
+        ("rcs", False),
+        (".rcs", False),
+        (".gitattributes", True),
+        (".gitignore", True),
+        ("_gitignore", False),
+        (".gitmodules", True),
+        (".gitfoo", False),
+        (".mailmap", True),
+        (".gitmailmap", False),
+        (".hgignore", True),
+        (".hgsigs", True),
+        (".hgtags", True),
+        (".binaries", True),
+        (".boring", True),
+        (".bzrignore", True),
+        ("foo.txt,v", True),
+        (",v", False),
+        (".gitignore,v", True),
+        ("foo.txt", False),
+    ],
+)
+def test_select_vcs(name: str, r: bool) -> None:
+    entry = Mock()
+    entry.configure_mock(name=name)
+    assert SELECT_VCS(entry) is r
