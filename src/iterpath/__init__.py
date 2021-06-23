@@ -93,6 +93,12 @@ def iterpath(
     ``sort_key`` parameter or as a filter/exclude parameter must accept
     `os.DirEntry` instances.
 
+    .. versionchanged:: 0.2.0
+        ``dirpath`` now defaults to the current directory
+
+    .. versionchanged:: 0.3.0
+        ``filter`` and ``exclude`` arguments added
+
     :param dirpath: the directory over which to iterate
     :param bool dirs: Whether to include directories in the output
     :param bool topdown:
@@ -253,6 +259,12 @@ def iterpath(
 
 
 class Selector(ABC, Generic[AnyStr]):
+    """
+    .. versionadded:: 0.3.0
+
+    Base class for selectors
+    """
+
     @abstractmethod
     def __call__(self, _entry: "os.DirEntry[AnyStr]") -> bool:
         ...
@@ -269,6 +281,14 @@ class Selector(ABC, Generic[AnyStr]):
 
 @dataclass
 class SelectAny(Selector[AnyStr]):
+    """
+    .. versionadded:: 0.3.0
+
+    Selects `~os.DirEntry`'s that match any of the given selectors.
+
+    This class is the return type of ``|`` on two selectors.
+    """
+
     selectors: List[Selector[AnyStr]]
 
     def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
@@ -276,6 +296,13 @@ class SelectAny(Selector[AnyStr]):
 
 
 class SelectNames(Selector[AnyStr]):
+    """
+    .. versionadded:: 0.3.0
+
+    Selects `~os.DirEntry`'s whose names are one of ``names``.  If
+    ``case_sensitive`` is `False`, the check is performed case-insensitively.
+    """
+
     def __init__(self, *names: AnyStr, case_sensitive: bool = True) -> None:
         self.names: Set[AnyStr] = set(names)
         self.case_sensitive: bool = case_sensitive
@@ -307,6 +334,13 @@ class SelectNames(Selector[AnyStr]):
 
 @dataclass
 class SelectRegex(Selector[AnyStr]):
+    """
+    .. versionadded:: 0.3.0
+
+    Selects `~os.DirEntry`'s whose names match (using `re.search()`) the given
+    regular expression
+    """
+
     pattern: Union[AnyStr, "Pattern[AnyStr]"]
 
     def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
@@ -315,18 +349,33 @@ class SelectRegex(Selector[AnyStr]):
 
 @dataclass
 class SelectGlob(Selector[AnyStr]):
+    """
+    .. versionadded:: 0.3.0
+
+    Selects `~os.DirEntry`'s whose names match the given fileglob pattern
+    """
+
     pattern: AnyStr
 
     def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
         return fnmatch(entry.name, self.pattern)
 
 
+#: .. versionadded:: 0.3.0
+#:
+#: Selects `~os.DirEntry`'s whose names begin with a period
 SELECT_DOTS = SelectGlob(".*")
 
+#: .. versionadded:: 0.3.0
+#:
+#: Selects version control directories
 SELECT_VCS_DIRS = SelectNames(
     ".git", ".hg", "_darcs", ".bzr", ".svn", "_svn", "CVS", "RCS"
 )
 
+#: .. versionadded:: 0.3.0
+#:
+#: Selects version-control-specific files
 SELECT_VCS_FILES = (
     SelectNames(
         ".gitattributes",
@@ -343,4 +392,8 @@ SELECT_VCS_FILES = (
     | SelectGlob("?*,v")
 )
 
+#: .. versionadded:: 0.3.0
+#:
+#: Selects `~os.DirEntry`'s matched by either `SELECT_VCS_DIRS` or
+#: `SELECT_VCS_FILES`
 SELECT_VCS = SELECT_VCS_DIRS | SELECT_VCS_FILES

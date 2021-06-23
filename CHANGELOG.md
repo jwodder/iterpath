@@ -2,7 +2,7 @@ v0.3.0 (in development)
 -----------------------
 - Add `filter` and `exclude` arguments
 - Add `SelectNames`, `SelectGlob`, `SelectRegex`, `SELECT_DOTS`, `SELECT_VCS`,
-  `SELECT_VCS_DIRS`, and `SELECT_VCS_FILES` for easy filtering by filename
+  `SELECT_VCS_DIRS`, and `SELECT_VCS_FILES` for easy filtering by entry name
 
 v0.2.0 (2021-02-19)
 -------------------

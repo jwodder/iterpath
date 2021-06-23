@@ -180,3 +180,78 @@ file-specific arguments.
 
 - Setting ``followlinks`` to ``True`` can result in infinite recursion if a
   symlink points to a parent directory of itself.
+
+Selectors
+---------
+
+*New in version 0.3.0*
+
+``iterpath`` also provides a selection of "selector" classes & constants for
+easy construction of ``filter`` and ``exclude`` arguments.  Selectors are
+callables that return true for ``DirEntry``'s whose (base) names match given
+criteria.
+
+Selectors can even be combined using the ``|`` operator:
+
+.. code:: python
+
+    # This only returns entries whose names end in ".txt" or equal "foo.png" or
+    # ".hidden":
+    iterpath(
+        dirpath,
+        filter=SelectGlob("*.txt") | SelectNames("foo.png", ".hidden")
+    )
+
+    # Exclude all dot-directories and VCS directories:
+    iterpath(dirpath, exclude_dirs=SELECT_DOTS | SELECT_VCS_DIRS)
+
+The selectors:
+
+.. code:: python
+
+    class SelectNames(*names: AnyStr, case_sensitive: bool = True)
+
+Selects ``DirEntry``'s whose names are one of ``names``.  If ``case_sensitive``
+is ``False``, the check is performed case-insensitively.
+
+.. code:: python
+
+    class SelectGlob(pattern: AnyStr)
+
+Selects ``DirEntry``'s whose names match the given fileglob pattern
+
+.. code:: python
+
+    class SelectRegex(pattern: Union[AnyStr, re.Pattern[AnyStr]])
+
+Selects ``DirEntry``'s whose names match (using ``re.search()``) the given
+regular expression
+
+.. code:: python
+
+    SELECT_DOTS
+
+Selects ``DirEntry``'s whose names begin with a period
+
+.. code:: python
+
+    SELECT_VCS
+
+Selects ``DirEntry``'s matched by either ``SELECT_VCS_DIRS`` or
+``SELECT_VCS_FILES`` (see below)
+
+.. code:: python
+
+    SELECT_VCS_DIRS
+
+Selects the following names of version-control directories: ``.git``, ``.hg``,
+``_darcs``, ``.bzr``, ``.svn``, ``_svn``, ``CVS``, ``RCS``
+
+.. code:: python
+
+    SELECT_VCS_FILES
+
+Selects the following names of version-control-specific files:
+``.gitattributes``, ``.gitignore``, ``.gitmodules``, ``.mailmap``,
+``.hgignore``, ``.hgsigs``, ``.hgtags``, ``.binaries``, ``.boring``,
+``.bzrignore``, and all nonempty filenames that end in ``,v``
