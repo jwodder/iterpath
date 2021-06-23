@@ -113,6 +113,10 @@ def iterpath(
         Specify a predicate to be applied to all files encountered; only those
         for which the predicate returns a false value will be yielded
 
+    If both ``filter_dirs`` and ``exclude_dirs`` are set, a given directory
+    will only be included if ``filter_dirs`` returns true and ``exclude_dirs``
+    returns false, and likewise for files.
+
     .. warning::
 
         If ``dirpath`` is a relative path, changing the working directory while
