@@ -17,6 +17,7 @@ __license__ = "MIT"
 __url__ = "https://github.com/jwodder/iterpath"
 
 import builtins
+from dataclasses import dataclass
 from operator import attrgetter
 import os
 from pathlib import Path
@@ -38,10 +39,10 @@ if TYPE_CHECKING:
 __all__ = ["iterpath"]
 
 
+@dataclass
 class DirEntries(Generic[AnyStr]):
-    def __init__(self, dirpath: Path, entries: Iterator["os.DirEntry[AnyStr]"]) -> None:
-        self.dirpath: Path = dirpath
-        self.entries: Iterator["os.DirEntry[AnyStr]"] = entries
+    dirpath: Path
+    entries: Iterator["os.DirEntry[AnyStr]"]
 
 
 def iterpath(
