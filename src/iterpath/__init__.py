@@ -276,20 +276,31 @@ class SelectAny(Selector[AnyStr]):
 
 
 class SelectNames(Selector[AnyStr]):
-    def __init__(self, *names: AnyStr) -> None:
+    def __init__(self, *names: AnyStr, case_sensitive: bool = True) -> None:
         self.names: Set[AnyStr] = set(names)
+        self.case_sensitive: bool = case_sensitive
+        if not case_sensitive:
+            self.names = {n.lower() for n in self.names}
 
     def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
-        return entry.name in self.names
+        name = entry.name
+        if not self.case_sensitive:
+            name = name.lower()
+        return name in self.names
 
     def __repr__(self) -> str:
-        return "{}({})".format(
-            type(self).__name__, ", ".join(map(repr, sorted(self.names)))
+        return "{}({}, case_sensitive={})".format(
+            type(self).__name__,
+            ", ".join(map(repr, sorted(self.names))),
+            self.case_sensitive,
         )
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, SelectNames):
-            return self.names == other.names
+            return (
+                self.names == other.names
+                and self.case_sensitive == other.case_sensitive
+            )
         else:
             return NotImplemented
 

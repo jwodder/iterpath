@@ -34,17 +34,50 @@ def test_select_names(name: str, r: bool) -> None:
     assert s(entry) is r
 
 
+@pytest.mark.parametrize(
+    "name,r",
+    [
+        ("foo.txt", True),
+        ("bar.png", True),
+        (".gh", True),
+        ("barfoo.txt", False),
+        ("foo.png", False),
+        ("", False),
+        (".ghignore", False),
+        ("foobar.txt", False),
+        ("foo", False),
+        ("FOO.TXT", True),
+        (".GH", True),
+        ("BaR.pNG", True),
+    ],
+)
+def test_select_names_insensitive(name: str, r: bool) -> None:
+    s = SelectNames("FOO.txt", "bar.png", ".gh", case_sensitive=False)
+    entry = Mock()
+    entry.configure_mock(name=name)
+    assert s(entry) is r
+
+
 def test_select_names_repr() -> None:
-    s = SelectNames("foo.txt", "bar.png", ".gh")
-    assert repr(s) == "SelectNames('.gh', 'bar.png', 'foo.txt')"
+    s = SelectNames("FOO.txt", "bar.PNG", ".gh")
+    assert repr(s) == "SelectNames('.gh', 'FOO.txt', 'bar.PNG', case_sensitive=True)"
+
+
+def test_select_names_repr_insensitive() -> None:
+    s = SelectNames("FOO.txt", "bar.PNG", ".gh", case_sensitive=False)
+    assert repr(s) == "SelectNames('.gh', 'bar.png', 'foo.txt', case_sensitive=False)"
 
 
 def test_select_names_eq() -> None:
     s = SelectNames("foo.txt", "bar.png", ".gh")
     assert s == SelectNames(".gh", "foo.txt", "bar.png")
+    assert s != SelectNames(".gh", "foo.txt", "bar.png", case_sensitive=False)
     assert s != SelectNames(".gh", "foo.txt", "bar.png", "quux.pdf")
     assert s != SelectNames(".gh", "foo.txt")
     assert s != {"foo.txt", "bar.png", ".gh"}
+    assert SelectNames("FOO", "BaR", case_sensitive=False) == SelectNames(
+        "foo", "bar", case_sensitive=False
+    )
 
 
 @pytest.mark.parametrize(
