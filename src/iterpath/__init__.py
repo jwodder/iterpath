@@ -25,6 +25,7 @@ import os
 from pathlib import Path
 import re
 from typing import (
+    TYPE_CHECKING,
     Any,
     AnyStr,
     Callable,
@@ -34,7 +35,6 @@ from typing import (
     Optional,
     Pattern,
     Set,
-    TYPE_CHECKING,
     Union,
     cast,
 )
