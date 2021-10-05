@@ -1,3 +1,7 @@
+v0.4.0 (in development)
+-----------------------
+- Support Python 3.10
+
 v0.3.0 (2021-06-23)
 -------------------
 - Add `filter` and `exclude` arguments
