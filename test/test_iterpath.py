@@ -496,8 +496,8 @@ def test_simple_iterpath_sort_delete_dirs_onerror_raise(tmp_path: Path) -> None:
             if p.is_dir():
                 rmtree(p)
     # Apply `Path` to `.filename` to get something predictable, as it's a str
-    # on CPython but an os.DirEntry on PyPy:
-    assert Path(excinfo.value.filename) == dirpath / ".config"
+    # on CPython, an os.DirEntry on PyPy-3.6, and a bytes on PyPy-3.7:
+    assert Path(os.fsdecode(excinfo.value.filename)) == dirpath / ".config"
     assert paths == [dirpath / ".config"]
 
 
@@ -505,7 +505,7 @@ def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path) -> None
     error_files: List[Path] = []
 
     def record(e: OSError) -> None:
-        error_files.append(Path(e.filename))
+        error_files.append(Path(os.fsdecode(e.filename)))
 
     dirpath = tmp_path / "dir"
     copytree(DATA_DIR / "dir01", dirpath)
