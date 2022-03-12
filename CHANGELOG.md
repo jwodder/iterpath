@@ -1,5 +1,5 @@
-v0.4.0 (in development)
------------------------
+v0.3.1 (2022-03-12)
+-------------------
 - Support Python 3.10
 - Update for mypy 0.940
 
