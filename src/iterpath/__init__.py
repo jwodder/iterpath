@@ -40,7 +40,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from _typeshed import SupportsLessThan
+    from _typeshed import SupportsRichComparison
 
 __all__ = [
     "SELECT_DOTS",
@@ -69,7 +69,9 @@ def iterpath(
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
-    sort_key: Optional[Callable[["os.DirEntry[AnyStr]"], "SupportsLessThan"]] = None,
+    sort_key: Optional[
+        Callable[["os.DirEntry[AnyStr]"], "SupportsRichComparison"]
+    ] = None,
     sort_reverse: bool = False,
     filter: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     filter_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
