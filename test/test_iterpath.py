@@ -6,8 +6,6 @@ from typing import Callable, List
 import pytest
 from iterpath import SELECT_DOTS, iterpath
 
-DATA_DIR = Path(__file__).with_name("data")
-
 
 def name_startswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
     def func(e: "os.DirEntry[str]") -> bool:
@@ -34,51 +32,91 @@ def reverse_name(e: "os.DirEntry[str]") -> str:
     return e.name[::-1]
 
 
-@pytest.fixture
-def link_dir(tmp_path: Path) -> Path:
-    # Sdists don't preserve symlinks, so this directory can't be distributed
-    # the same way as the others.  Hence, we create it on-demand instead.
-    (tmp_path / "apple.txt").touch()
-    (tmp_path / "banana.txt").touch()
-    (tmp_path / "link").symlink_to(DATA_DIR / "dir01", target_is_directory=True)
-    (tmp_path / "mango.txt").touch()
-    return tmp_path
+@pytest.fixture(scope="session")
+def tree01(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    dirpath = tmp_path_factory.mktemp("tree01")
+    for p in [
+        Path(".config", "cfg.ini"),
+        Path(".hidden"),
+        Path("foo.txt"),
+        Path("glarch", "bar.txt"),
+        Path("gnusto", "cleesh.txt"),
+        Path("gnusto", "quux", "quism.txt"),
+        Path("xyzzy.txt"),
+    ]:
+        (dirpath / p).parent.mkdir(parents=True, exist_ok=True)
+        (dirpath / p).touch()
+    return dirpath
 
 
-def test_simple_iterpath() -> None:
-    assert sorted(iterpath(DATA_DIR / "dir01")) == [
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+@pytest.fixture(scope="session")
+def link_dir(tmp_path_factory: pytest.TempPathFactory, tree01: Path) -> Path:
+    dirpath = tmp_path_factory.mktemp("link_dir")
+    (dirpath / "apple.txt").touch()
+    (dirpath / "banana.txt").touch()
+    (dirpath / "link").symlink_to(tree01, target_is_directory=True)
+    (dirpath / "mango.txt").touch()
+    return dirpath
+
+
+@pytest.fixture(scope="session")
+def tree03(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    dirpath = tmp_path_factory.mktemp("tree03")
+    for p in [
+        Path(".config", "options.txt"),
+        Path(".config", "subdir", "settings.txt"),
+        Path("_cache", "stuff.txt"),
+        Path("_cache", "subcache", "data.txt"),
+        Path("bar.dat"),
+        Path("foo.txt"),
+        Path("glarch", "cleesh.dat"),
+        Path("glarch", "gnusto.txt"),
+        Path("glarch", "xxx.dat"),
+        Path("glarch", "xxx.txt"),
+        Path("xyz.dat"),
+        Path("xyz.txt"),
+    ]:
+        (dirpath / p).parent.mkdir(parents=True, exist_ok=True)
+        (dirpath / p).touch()
+    return dirpath
+
+
+def test_simple_iterpath(tree01: Path) -> None:
+    assert sorted(iterpath(tree01)) == [
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort() -> None:
-    assert list(iterpath(DATA_DIR / "dir01", sort=True)) == [
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True)) == [
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_relpath_curdir(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.chdir(DATA_DIR / "dir01")
+def test_simple_iterpath_sort_relpath_curdir(
+    monkeypatch: pytest.MonkeyPatch, tree01: Path
+) -> None:
+    monkeypatch.chdir(tree01)
     assert list(iterpath(os.curdir, sort=True)) == [
         Path(".config"),
         Path(".config", "cfg.ini"),
@@ -94,228 +132,204 @@ def test_simple_iterpath_sort_relpath_curdir(monkeypatch: pytest.MonkeyPatch) ->
     ]
 
 
-def test_simple_iterpath_sort_relpath_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.chdir(DATA_DIR)
-    assert list(iterpath("dir01", sort=True)) == [
-        Path("dir01", ".config"),
-        Path("dir01", ".config", "cfg.ini"),
-        Path("dir01", ".hidden"),
-        Path("dir01", "foo.txt"),
-        Path("dir01", "glarch"),
-        Path("dir01", "glarch", "bar.txt"),
-        Path("dir01", "gnusto"),
-        Path("dir01", "gnusto", "cleesh.txt"),
-        Path("dir01", "gnusto", "quux"),
-        Path("dir01", "gnusto", "quux", "quism.txt"),
-        Path("dir01", "xyzzy.txt"),
+def test_simple_iterpath_sort_relpath_prefix(
+    monkeypatch: pytest.MonkeyPatch, tree01: Path
+) -> None:
+    monkeypatch.chdir(tree01.parent)
+    assert list(iterpath(tree01.name, sort=True)) == [
+        Path(tree01.name, ".config"),
+        Path(tree01.name, ".config", "cfg.ini"),
+        Path(tree01.name, ".hidden"),
+        Path(tree01.name, "foo.txt"),
+        Path(tree01.name, "glarch"),
+        Path(tree01.name, "glarch", "bar.txt"),
+        Path(tree01.name, "gnusto"),
+        Path(tree01.name, "gnusto", "cleesh.txt"),
+        Path(tree01.name, "gnusto", "quux"),
+        Path(tree01.name, "gnusto", "quux", "quism.txt"),
+        Path(tree01.name, "xyzzy.txt"),
     ]
 
 
-def test_simple_iterpath_sort_no_dirs() -> None:
-    assert list(iterpath(DATA_DIR / "dir01", sort=True, dirs=False)) == [
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_no_dirs(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, dirs=False)) == [
+        tree01 / ".config" / "cfg.ini",
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_no_topdown() -> None:
-    assert list(iterpath(DATA_DIR / "dir01", sort=True, topdown=False)) == [
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_no_topdown(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, topdown=False)) == [
+        tree01 / ".config" / "cfg.ini",
+        tree01 / ".config",
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "glarch",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_include_root() -> None:
-    assert list(iterpath(DATA_DIR / "dir01", sort=True, include_root=True)) == [
-        DATA_DIR / "dir01",
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_include_root(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, include_root=True)) == [
+        tree01,
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_include_root_no_topdown() -> None:
+def test_simple_iterpath_sort_include_root_no_topdown(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, include_root=True, topdown=False)) == [
+        tree01 / ".config" / "cfg.ini",
+        tree01 / ".config",
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "glarch",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto",
+        tree01 / "xyzzy.txt",
+        tree01,
+    ]
+
+
+def test_simple_iterpath_sort_key(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, sort_key=reverse_name,)) == [
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / ".hidden",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "foo.txt",
+        tree01 / "xyzzy.txt",
+    ]
+
+
+def test_simple_iterpath_sort_reverse(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, sort_reverse=True)) == [
+        tree01 / "xyzzy.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "foo.txt",
+        tree01 / ".hidden",
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+    ]
+
+
+def test_simple_iterpath_sort_key_reverse(tree01: Path) -> None:
     assert list(
-        iterpath(
-            DATA_DIR / "dir01",
-            sort=True,
-            include_root=True,
-            topdown=False,
-        )
+        iterpath(tree01, sort=True, sort_key=reverse_name, sort_reverse=True)
     ) == [
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "xyzzy.txt",
-        DATA_DIR / "dir01",
+        tree01 / "xyzzy.txt",
+        tree01 / "foo.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / ".hidden",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
     ]
 
 
-def test_simple_iterpath_sort_key() -> None:
-    assert list(iterpath(DATA_DIR / "dir01", sort=True, sort_key=reverse_name,)) == [
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_filter_dirs(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, filter_dirs=not_name_startswith("."))) == [
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_reverse() -> None:
-    assert list(iterpath(DATA_DIR / "dir01", sort=True, sort_reverse=True)) == [
-        DATA_DIR / "dir01" / "xyzzy.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
+def test_simple_iterpath_sort_filter_files(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, filter_files=not_name_startswith("."))) == [
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_key_reverse() -> None:
+def test_simple_iterpath_sort_filter_dirs_and_files(tree01: Path) -> None:
     assert list(
         iterpath(
-            DATA_DIR / "dir01",
-            sort=True,
-            sort_key=reverse_name,
-            sort_reverse=True,
-        )
-    ) == [
-        DATA_DIR / "dir01" / "xyzzy.txt",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-    ]
-
-
-def test_simple_iterpath_sort_filter_dirs() -> None:
-    assert list(
-        iterpath(
-            DATA_DIR / "dir01",
-            sort=True,
-            filter_dirs=not_name_startswith("."),
-        )
-    ) == [
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
-    ]
-
-
-def test_simple_iterpath_sort_filter_files() -> None:
-    assert list(
-        iterpath(
-            DATA_DIR / "dir01",
-            sort=True,
-            filter_files=not_name_startswith("."),
-        )
-    ) == [
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
-    ]
-
-
-def test_simple_iterpath_sort_filter_dirs_and_files() -> None:
-    assert list(
-        iterpath(
-            DATA_DIR / "dir01",
+            tree01,
             sort=True,
             filter_dirs=not_name_startswith("."),
             filter_files=not_name_startswith("f"),
         )
     ) == [
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+        tree01 / ".hidden",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_filter() -> None:
-    assert list(
-        iterpath(DATA_DIR / "dir01", sort=True, filter=not_name_startswith("."))
-    ) == [
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_filter(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, filter=not_name_startswith("."))) == [
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_filter_filter_dirs() -> None:
+def test_simple_iterpath_filter_filter_dirs(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
-                DATA_DIR / "dir01",
+                tree01,
                 filter=not_name_startswith("."),
                 filter_dirs=not_name_startswith("f"),
             )
@@ -323,11 +337,11 @@ def test_simple_iterpath_filter_filter_dirs() -> None:
     assert str(excinfo.value) == "filter and filter_dirs are mutually exclusive"
 
 
-def test_simple_iterpath_filter_filter_files() -> None:
+def test_simple_iterpath_filter_filter_files(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
-                DATA_DIR / "dir01",
+                tree01,
                 filter=not_name_startswith("."),
                 filter_files=not_name_startswith("f"),
             )
@@ -335,123 +349,105 @@ def test_simple_iterpath_filter_filter_files() -> None:
     assert str(excinfo.value) == "filter and filter_files are mutually exclusive"
 
 
-def test_simple_iterpath_sort_exclude_dirs() -> None:
-    assert list(
-        iterpath(
-            DATA_DIR / "dir01",
-            sort=True,
-            exclude_dirs=name_startswith("."),
-        )
-    ) == [
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_exclude_dirs(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, exclude_dirs=name_startswith("."))) == [
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_exclude_files() -> None:
-    assert list(
-        iterpath(
-            DATA_DIR / "dir01",
-            sort=True,
-            exclude_files=name_startswith("."),
-        )
-    ) == [
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_exclude_files(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, exclude_files=name_startswith("."))) == [
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_exclude_dirs_and_files() -> None:
+def test_simple_iterpath_sort_exclude_dirs_and_files(tree01: Path) -> None:
     assert list(
         iterpath(
-            DATA_DIR / "dir01",
+            tree01,
             sort=True,
             exclude_dirs=name_startswith("."),
             exclude_files=name_startswith("f"),
         )
     ) == [
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+        tree01 / ".hidden",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_exclude() -> None:
-    assert list(
-        iterpath(DATA_DIR / "dir01", sort=True, exclude=name_startswith("."))
-    ) == [
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_exclude(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, exclude=name_startswith("."))) == [
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_exclude_selector() -> None:
-    assert list(iterpath(DATA_DIR / "dir01", sort=True, exclude=SELECT_DOTS)) == [
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_exclude_selector(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, exclude=SELECT_DOTS)) == [
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_exclude_exclude_dirs() -> None:
+def test_simple_iterpath_exclude_exclude_dirs(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
-                DATA_DIR / "dir01",
-                exclude=name_startswith("."),
-                exclude_dirs=name_startswith("f"),
+                tree01, exclude=name_startswith("."), exclude_dirs=name_startswith("f")
             )
         )
     assert str(excinfo.value) == "exclude and exclude_dirs are mutually exclusive"
 
 
-def test_simple_iterpath_exclude_exclude_files() -> None:
+def test_simple_iterpath_exclude_exclude_files(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
-                DATA_DIR / "dir01",
-                exclude=name_startswith("."),
-                exclude_files=name_startswith("f"),
+                tree01, exclude=name_startswith("."), exclude_files=name_startswith("f")
             )
         )
     assert str(excinfo.value) == "exclude and exclude_files are mutually exclusive"
 
 
-def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files() -> None:
+def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files(tree03: Path) -> None:
     assert list(
         iterpath(
-            DATA_DIR / "dir03",
+            tree03,
             sort=True,
             filter_files=name_endswith(".txt"),
             filter_dirs=not_name_startswith("_"),
@@ -459,15 +455,15 @@ def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files() -> None:
             exclude_files=name_startswith("x"),
         )
     ) == [
-        DATA_DIR / "dir03" / "foo.txt",
-        DATA_DIR / "dir03" / "glarch",
-        DATA_DIR / "dir03" / "glarch" / "gnusto.txt",
+        tree03 / "foo.txt",
+        tree03 / "glarch",
+        tree03 / "glarch" / "gnusto.txt",
     ]
 
 
-def test_simple_iterpath_sort_delete_dirs(tmp_path: Path) -> None:
+def test_simple_iterpath_sort_delete_dirs(tree01: Path, tmp_path: Path) -> None:
     dirpath = tmp_path / "dir"
-    copytree(DATA_DIR / "dir01", dirpath)
+    copytree(tree01, dirpath)
     paths = []
     for p in iterpath(dirpath, sort=True):
         paths.append(p)
@@ -483,12 +479,14 @@ def test_simple_iterpath_sort_delete_dirs(tmp_path: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_delete_dirs_onerror_raise(tmp_path: Path) -> None:
+def test_simple_iterpath_sort_delete_dirs_onerror_raise(
+    tmp_path: Path, tree01: Path
+) -> None:
     def raise_(e: OSError) -> None:
         raise e
 
     dirpath = tmp_path / "dir"
-    copytree(DATA_DIR / "dir01", dirpath)
+    copytree(tree01, dirpath)
     paths = []
     with pytest.raises(OSError) as excinfo:
         for p in iterpath(dirpath, sort=True, onerror=raise_):
@@ -501,14 +499,16 @@ def test_simple_iterpath_sort_delete_dirs_onerror_raise(tmp_path: Path) -> None:
     assert paths == [dirpath / ".config"]
 
 
-def test_simple_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path) -> None:
+def test_simple_iterpath_sort_delete_dirs_onerror_record(
+    tmp_path: Path, tree01: Path
+) -> None:
     error_files: List[Path] = []
 
     def record(e: OSError) -> None:
         error_files.append(Path(os.fsdecode(e.filename)))
 
     dirpath = tmp_path / "dir"
-    copytree(DATA_DIR / "dir01", dirpath)
+    copytree(tree01, dirpath)
     paths = []
     for p in iterpath(dirpath, sort=True, onerror=record):
         paths.append(p)
@@ -590,24 +590,26 @@ def test_linked_iterpath_sort_followlinks_no_dirs(link_dir: Path) -> None:
     platform.system() == "Windows",
     reason="bytes(Path) should only be used on POSIX",
 )
-def test_simple_iterpath_sort_bytes() -> None:
-    assert list(iterpath(bytes(DATA_DIR / "dir01"), sort=True)) == [
-        DATA_DIR / "dir01" / ".config",
-        DATA_DIR / "dir01" / ".config" / "cfg.ini",
-        DATA_DIR / "dir01" / ".hidden",
-        DATA_DIR / "dir01" / "foo.txt",
-        DATA_DIR / "dir01" / "glarch",
-        DATA_DIR / "dir01" / "glarch" / "bar.txt",
-        DATA_DIR / "dir01" / "gnusto",
-        DATA_DIR / "dir01" / "gnusto" / "cleesh.txt",
-        DATA_DIR / "dir01" / "gnusto" / "quux",
-        DATA_DIR / "dir01" / "gnusto" / "quux" / "quism.txt",
-        DATA_DIR / "dir01" / "xyzzy.txt",
+def test_simple_iterpath_sort_bytes(tree01: Path) -> None:
+    assert list(iterpath(bytes(tree01), sort=True)) == [
+        tree01 / ".config",
+        tree01 / ".config" / "cfg.ini",
+        tree01 / ".hidden",
+        tree01 / "foo.txt",
+        tree01 / "glarch",
+        tree01 / "glarch" / "bar.txt",
+        tree01 / "gnusto",
+        tree01 / "gnusto" / "cleesh.txt",
+        tree01 / "gnusto" / "quux",
+        tree01 / "gnusto" / "quux" / "quism.txt",
+        tree01 / "xyzzy.txt",
     ]
 
 
-def test_simple_iterpath_sort_default_curdir(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.chdir(DATA_DIR / "dir01")
+def test_simple_iterpath_sort_default_curdir(
+    monkeypatch: pytest.MonkeyPatch, tree01: Path
+) -> None:
+    monkeypatch.chdir(tree01)
     assert list(iterpath(sort=True)) == [
         Path(".config"),
         Path(".config", "cfg.ini"),
