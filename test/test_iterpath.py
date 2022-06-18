@@ -81,7 +81,7 @@ def tree03(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return dirpath
 
 
-def test_simple_iterpath(tree01: Path) -> None:
+def test_iterpath(tree01: Path) -> None:
     assert sorted(iterpath(tree01)) == [
         tree01 / ".config",
         tree01 / ".config" / "cfg.ini",
@@ -97,7 +97,7 @@ def test_simple_iterpath(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort(tree01: Path) -> None:
+def test_iterpath_sort(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True)) == [
         tree01 / ".config",
         tree01 / ".config" / "cfg.ini",
@@ -113,7 +113,7 @@ def test_simple_iterpath_sort(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_relpath_curdir(
+def test_iterpath_sort_relpath_curdir(
     monkeypatch: pytest.MonkeyPatch, tree01: Path
 ) -> None:
     monkeypatch.chdir(tree01)
@@ -132,7 +132,7 @@ def test_simple_iterpath_sort_relpath_curdir(
     ]
 
 
-def test_simple_iterpath_sort_relpath_prefix(
+def test_iterpath_sort_relpath_prefix(
     monkeypatch: pytest.MonkeyPatch, tree01: Path
 ) -> None:
     monkeypatch.chdir(tree01.parent)
@@ -151,7 +151,7 @@ def test_simple_iterpath_sort_relpath_prefix(
     ]
 
 
-def test_simple_iterpath_sort_no_dirs(tree01: Path) -> None:
+def test_iterpath_sort_no_dirs(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, dirs=False)) == [
         tree01 / ".config" / "cfg.ini",
         tree01 / ".hidden",
@@ -163,7 +163,7 @@ def test_simple_iterpath_sort_no_dirs(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_no_topdown(tree01: Path) -> None:
+def test_iterpath_sort_no_topdown(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, topdown=False)) == [
         tree01 / ".config" / "cfg.ini",
         tree01 / ".config",
@@ -179,7 +179,7 @@ def test_simple_iterpath_sort_no_topdown(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_include_root(tree01: Path) -> None:
+def test_iterpath_sort_include_root(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, include_root=True)) == [
         tree01,
         tree01 / ".config",
@@ -196,7 +196,7 @@ def test_simple_iterpath_sort_include_root(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_include_root_no_topdown(tree01: Path) -> None:
+def test_iterpath_sort_include_root_no_topdown(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, include_root=True, topdown=False)) == [
         tree01 / ".config" / "cfg.ini",
         tree01 / ".config",
@@ -213,7 +213,7 @@ def test_simple_iterpath_sort_include_root_no_topdown(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_key(tree01: Path) -> None:
+def test_iterpath_sort_key(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, sort_key=reverse_name,)) == [
         tree01 / ".config",
         tree01 / ".config" / "cfg.ini",
@@ -229,7 +229,7 @@ def test_simple_iterpath_sort_key(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_reverse(tree01: Path) -> None:
+def test_iterpath_sort_reverse(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, sort_reverse=True)) == [
         tree01 / "xyzzy.txt",
         tree01 / "gnusto",
@@ -245,7 +245,7 @@ def test_simple_iterpath_sort_reverse(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_key_reverse(tree01: Path) -> None:
+def test_iterpath_sort_key_reverse(tree01: Path) -> None:
     assert list(
         iterpath(tree01, sort=True, sort_key=reverse_name, sort_reverse=True)
     ) == [
@@ -263,7 +263,7 @@ def test_simple_iterpath_sort_key_reverse(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_filter_dirs(tree01: Path) -> None:
+def test_iterpath_sort_filter_dirs(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, filter_dirs=not_name_startswith("."))) == [
         tree01 / ".hidden",
         tree01 / "foo.txt",
@@ -277,7 +277,7 @@ def test_simple_iterpath_sort_filter_dirs(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_filter_files(tree01: Path) -> None:
+def test_iterpath_sort_filter_files(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, filter_files=not_name_startswith("."))) == [
         tree01 / ".config",
         tree01 / ".config" / "cfg.ini",
@@ -292,7 +292,7 @@ def test_simple_iterpath_sort_filter_files(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_filter_dirs_and_files(tree01: Path) -> None:
+def test_iterpath_sort_filter_dirs_and_files(tree01: Path) -> None:
     assert list(
         iterpath(
             tree01,
@@ -312,7 +312,7 @@ def test_simple_iterpath_sort_filter_dirs_and_files(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_filter(tree01: Path) -> None:
+def test_iterpath_sort_filter(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, filter=not_name_startswith("."))) == [
         tree01 / "foo.txt",
         tree01 / "glarch",
@@ -325,7 +325,7 @@ def test_simple_iterpath_sort_filter(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_filter_filter_dirs(tree01: Path) -> None:
+def test_iterpath_filter_filter_dirs(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
@@ -337,7 +337,7 @@ def test_simple_iterpath_filter_filter_dirs(tree01: Path) -> None:
     assert str(excinfo.value) == "filter and filter_dirs are mutually exclusive"
 
 
-def test_simple_iterpath_filter_filter_files(tree01: Path) -> None:
+def test_iterpath_filter_filter_files(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
@@ -349,7 +349,7 @@ def test_simple_iterpath_filter_filter_files(tree01: Path) -> None:
     assert str(excinfo.value) == "filter and filter_files are mutually exclusive"
 
 
-def test_simple_iterpath_sort_exclude_dirs(tree01: Path) -> None:
+def test_iterpath_sort_exclude_dirs(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, exclude_dirs=name_startswith("."))) == [
         tree01 / ".hidden",
         tree01 / "foo.txt",
@@ -363,7 +363,7 @@ def test_simple_iterpath_sort_exclude_dirs(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_exclude_files(tree01: Path) -> None:
+def test_iterpath_sort_exclude_files(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, exclude_files=name_startswith("."))) == [
         tree01 / ".config",
         tree01 / ".config" / "cfg.ini",
@@ -378,7 +378,7 @@ def test_simple_iterpath_sort_exclude_files(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_exclude_dirs_and_files(tree01: Path) -> None:
+def test_iterpath_sort_exclude_dirs_and_files(tree01: Path) -> None:
     assert list(
         iterpath(
             tree01,
@@ -398,7 +398,7 @@ def test_simple_iterpath_sort_exclude_dirs_and_files(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_exclude(tree01: Path) -> None:
+def test_iterpath_sort_exclude(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, exclude=name_startswith("."))) == [
         tree01 / "foo.txt",
         tree01 / "glarch",
@@ -411,7 +411,7 @@ def test_simple_iterpath_sort_exclude(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_exclude_selector(tree01: Path) -> None:
+def test_iterpath_sort_exclude_selector(tree01: Path) -> None:
     assert list(iterpath(tree01, sort=True, exclude=SELECT_DOTS)) == [
         tree01 / "foo.txt",
         tree01 / "glarch",
@@ -424,7 +424,7 @@ def test_simple_iterpath_sort_exclude_selector(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_exclude_exclude_dirs(tree01: Path) -> None:
+def test_iterpath_exclude_exclude_dirs(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
@@ -434,7 +434,7 @@ def test_simple_iterpath_exclude_exclude_dirs(tree01: Path) -> None:
     assert str(excinfo.value) == "exclude and exclude_dirs are mutually exclusive"
 
 
-def test_simple_iterpath_exclude_exclude_files(tree01: Path) -> None:
+def test_iterpath_exclude_exclude_files(tree01: Path) -> None:
     with pytest.raises(TypeError) as excinfo:
         list(
             iterpath(
@@ -444,7 +444,7 @@ def test_simple_iterpath_exclude_exclude_files(tree01: Path) -> None:
     assert str(excinfo.value) == "exclude and exclude_files are mutually exclusive"
 
 
-def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files(tree03: Path) -> None:
+def test_iterpath_sort_filter_and_exclude_dirs_and_files(tree03: Path) -> None:
     assert list(
         iterpath(
             tree03,
@@ -461,7 +461,7 @@ def test_simple_iterpath_sort_filter_and_exclude_dirs_and_files(tree03: Path) ->
     ]
 
 
-def test_simple_iterpath_sort_delete_dirs(tree01: Path, tmp_path: Path) -> None:
+def test_iterpath_sort_delete_dirs(tree01: Path, tmp_path: Path) -> None:
     dirpath = tmp_path / "dir"
     copytree(tree01, dirpath)
     paths = []
@@ -479,9 +479,7 @@ def test_simple_iterpath_sort_delete_dirs(tree01: Path, tmp_path: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_delete_dirs_onerror_raise(
-    tmp_path: Path, tree01: Path
-) -> None:
+def test_iterpath_sort_delete_dirs_onerror_raise(tmp_path: Path, tree01: Path) -> None:
     def raise_(e: OSError) -> None:
         raise e
 
@@ -499,9 +497,7 @@ def test_simple_iterpath_sort_delete_dirs_onerror_raise(
     assert paths == [dirpath / ".config"]
 
 
-def test_simple_iterpath_sort_delete_dirs_onerror_record(
-    tmp_path: Path, tree01: Path
-) -> None:
+def test_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path, tree01: Path) -> None:
     error_files: List[Path] = []
 
     def record(e: OSError) -> None:
@@ -590,7 +586,7 @@ def test_linked_iterpath_sort_followlinks_no_dirs(link_dir: Path) -> None:
     platform.system() == "Windows",
     reason="bytes(Path) should only be used on POSIX",
 )
-def test_simple_iterpath_sort_bytes(tree01: Path) -> None:
+def test_iterpath_sort_bytes(tree01: Path) -> None:
     assert list(iterpath(bytes(tree01), sort=True)) == [
         tree01 / ".config",
         tree01 / ".config" / "cfg.ini",
@@ -606,7 +602,7 @@ def test_simple_iterpath_sort_bytes(tree01: Path) -> None:
     ]
 
 
-def test_simple_iterpath_sort_default_curdir(
+def test_iterpath_sort_default_curdir(
     monkeypatch: pytest.MonkeyPatch, tree01: Path
 ) -> None:
     monkeypatch.chdir(tree01)
