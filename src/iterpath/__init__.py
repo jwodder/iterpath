@@ -10,7 +10,7 @@ for sorting & filtering entries.
 Visit <https://github.com/jwodder/iterpath> for more information.
 """
 
-__version__ = "0.3.1"
+__version__ = "0.4.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "iterpath@varonathe.org"
 __license__ = "MIT"
@@ -81,14 +81,18 @@ def iterpath(
     exclude_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
     onerror: Optional[Callable[[OSError], Any]] = None,
     followlinks: bool = False,
+    return_relative: bool = False,
 ) -> Iterator[Path]:
     """
     Iterate through the file tree rooted at the directory ``dirpath`` (by
     default, the current directory) in depth-first order, yielding the files &
-    directories within.  If ``dirpath`` is an absolute path, the generated
-    `Path` objects will be absolute; otherwise, if ``dirpath`` is a relative
-    path, the `Path` objects will be relative and will have ``dirpath`` as a
-    prefix.
+    directories within.
+
+    If ``return_relative`` is true, the generated `Path` objects will be
+    relative to ``dirpath``.  If ``return_relative`` is false (the default) and
+    ``dirpath`` is an absolute path, the generated `Path` objects will be
+    absolute; otherwise, if ``dirpath`` is a relative path, the `Path` objects
+    will be relative and will have ``dirpath`` as a prefix.
 
     Note that, although `iterpath()` yields `pathlib.Path` objects, it operates
     internally on `os.DirEntry` objects, and so any function supplied as the
@@ -101,6 +105,9 @@ def iterpath(
     .. versionchanged:: 0.3.0
         ``filter`` and ``exclude`` arguments added
 
+    .. versionchanged:: 0.4.0
+        ``return_relative`` argument added
+
     :param dirpath: the directory over which to iterate
     :param bool dirs: Whether to include directories in the output
     :param bool topdown:
@@ -111,6 +118,8 @@ def iterpath(
         the output
     :param bool followlinks:
         Whether to treat a symlink to a directory as a directory
+    :param bool return_relative:
+        If true, the generated paths will be relative to ``dirpath``
     :param onerror:
         Specify a function to be called whenever an `OSError` is encountered
         while iterating over a directory.  If the function reraises the
@@ -175,6 +184,9 @@ def iterpath(
 
     if dirpath is None:
         dirpath = cast(Union[AnyStr, "os.PathLike[AnyStr]"], os.curdir)
+        pdirpath = Path()
+    else:
+        pdirpath = Path(os.fsdecode(dirpath))
 
     if sort_key is not None:
         keyfunc = sort_key
@@ -239,9 +251,19 @@ def iterpath(
             entries = iter(entry_list)
         return DirEntries(Path(os.fsdecode(p)), entries)
 
+    if return_relative:
+
+        def relativize(p: Path) -> Path:
+            return p.relative_to(pdirpath)
+
+    else:
+
+        def relativize(p: Path) -> Path:
+            return p
+
     dirstack = [get_entries(dirpath)]
     if include_root and topdown:
-        yield dirstack[0].dirpath
+        yield relativize(dirstack[0].dirpath)
     while dirstack:
         try:
             e = next(dirstack[-1].entries)
@@ -250,14 +272,14 @@ def iterpath(
                 onerror(exc)
             d = dirstack.pop()
             if dirs and not topdown and (dirstack or include_root):
-                yield d.dirpath
+                yield relativize(d.dirpath)
             continue
         if e.is_dir(follow_symlinks=followlinks):
             if dirs and topdown:
-                yield Path(os.fsdecode(e))
+                yield relativize(Path(os.fsdecode(e)))
             dirstack.append(get_entries(e))
         else:
-            yield Path(os.fsdecode(e))
+            yield relativize(Path(os.fsdecode(e)))
 
 
 class Selector(ABC, Generic[AnyStr]):
@@ -378,21 +400,18 @@ SELECT_VCS_DIRS = SelectNames(
 #: .. versionadded:: 0.3.0
 #:
 #: Selects version-control-specific files
-SELECT_VCS_FILES = (
-    SelectNames(
-        ".gitattributes",
-        ".gitignore",
-        ".gitmodules",
-        ".mailmap",
-        ".hgignore",
-        ".hgsigs",
-        ".hgtags",
-        ".binaries",
-        ".boring",
-        ".bzrignore",
-    )
-    | SelectGlob("?*,v")
-)
+SELECT_VCS_FILES = SelectNames(
+    ".gitattributes",
+    ".gitignore",
+    ".gitmodules",
+    ".mailmap",
+    ".hgignore",
+    ".hgsigs",
+    ".hgtags",
+    ".binaries",
+    ".boring",
+    ".bzrignore",
+) | SelectGlob("?*,v")
 
 #: .. versionadded:: 0.3.0
 #:

@@ -602,11 +602,12 @@ def test_iterpath_sort_bytes(tree01: Path) -> None:
     ]
 
 
+@pytest.mark.parametrize("return_relative", [False, True])
 def test_iterpath_sort_default_curdir(
-    monkeypatch: pytest.MonkeyPatch, tree01: Path
+    monkeypatch: pytest.MonkeyPatch, tree01: Path, return_relative: bool
 ) -> None:
     monkeypatch.chdir(tree01)
-    assert list(iterpath(sort=True)) == [
+    assert list(iterpath(sort=True, return_relative=return_relative)) == [
         Path(".config"),
         Path(".config", "cfg.ini"),
         Path(".hidden"),
@@ -617,5 +618,56 @@ def test_iterpath_sort_default_curdir(
         Path("gnusto", "cleesh.txt"),
         Path("gnusto", "quux"),
         Path("gnusto", "quux", "quism.txt"),
+        Path("xyzzy.txt"),
+    ]
+
+
+def test_iterpath_sort_return_relative(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, return_relative=True)) == [
+        Path(".config"),
+        Path(".config", "cfg.ini"),
+        Path(".hidden"),
+        Path("foo.txt"),
+        Path("glarch"),
+        Path("glarch", "bar.txt"),
+        Path("gnusto"),
+        Path("gnusto", "cleesh.txt"),
+        Path("gnusto", "quux"),
+        Path("gnusto", "quux", "quism.txt"),
+        Path("xyzzy.txt"),
+    ]
+
+
+def test_iterpath_sort_return_relative_include_root(tree01: Path) -> None:
+    assert list(
+        iterpath(tree01, sort=True, return_relative=True, include_root=True)
+    ) == [
+        Path(),
+        Path(".config"),
+        Path(".config", "cfg.ini"),
+        Path(".hidden"),
+        Path("foo.txt"),
+        Path("glarch"),
+        Path("glarch", "bar.txt"),
+        Path("gnusto"),
+        Path("gnusto", "cleesh.txt"),
+        Path("gnusto", "quux"),
+        Path("gnusto", "quux", "quism.txt"),
+        Path("xyzzy.txt"),
+    ]
+
+
+def test_iterpath_sort_return_relative_no_topdown(tree01: Path) -> None:
+    assert list(iterpath(tree01, sort=True, return_relative=True, topdown=False)) == [
+        Path(".config", "cfg.ini"),
+        Path(".config"),
+        Path(".hidden"),
+        Path("foo.txt"),
+        Path("glarch", "bar.txt"),
+        Path("glarch"),
+        Path("gnusto", "cleesh.txt"),
+        Path("gnusto", "quux", "quism.txt"),
+        Path("gnusto", "quux"),
+        Path("gnusto"),
         Path("xyzzy.txt"),
     ]

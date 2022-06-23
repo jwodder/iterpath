@@ -88,9 +88,13 @@ The ``iterpath`` module provides a single function, also named ``iterpath``:
 
 Iterate through the file tree rooted at the directory ``dirpath`` (by default,
 the current directory) in depth-first order, yielding the files & directories
-within.  If ``dirpath`` is an absolute path, the generated ``Path`` objects
-will be absolute; otherwise, if ``dirpath`` is a relative path, the ``Path``
-objects will be relative and will have ``dirpath`` as a prefix.
+within.
+
+If ``return_relative`` is true, the generated ``Path`` objects will be relative
+to ``dirpath``.  If ``return_relative`` is false (the default) and ``dirpath``
+is an absolute path, the generated ``Path`` objects will be absolute;
+otherwise, if ``dirpath`` is a relative path, the ``Path`` objects will be
+relative and will have ``dirpath`` as a prefix.
 
 Note that, although ``iterpath()`` yields ``pathlib.Path`` objects, it operates
 internally on ``os.DirEntry`` objects, and so any function supplied as the
@@ -112,6 +116,9 @@ Keyword arguments:
 
 ``followlinks: bool = False``
     Whether to treat a symlink to a directory as a directory
+
+``return_relative: bool = False``
+    If true, the generated paths will be relative to ``dirpath``
 
 ``onerror: Optional[Callable[[OSError], Any]] = None``
     Specify a function to be called whenever an ``OSError`` is encountered
