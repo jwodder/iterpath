@@ -1,34 +1,35 @@
+from __future__ import annotations
+from collections.abc import Callable
 import os
 from pathlib import Path
 import platform
 from shutil import copytree, rmtree
-from typing import Callable, List
 import pytest
 from iterpath import SELECT_DOTS, iterpath
 
 
-def name_startswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
-    def func(e: "os.DirEntry[str]") -> bool:
+def name_startswith(prefix: str) -> Callable[[os.DirEntry[str]], bool]:
+    def func(e: os.DirEntry[str]) -> bool:
         return e.name.startswith(prefix)
 
     return func
 
 
-def not_name_startswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
-    def func(e: "os.DirEntry[str]") -> bool:
+def not_name_startswith(prefix: str) -> Callable[[os.DirEntry[str]], bool]:
+    def func(e: os.DirEntry[str]) -> bool:
         return not e.name.startswith(prefix)
 
     return func
 
 
-def name_endswith(prefix: str) -> Callable[["os.DirEntry[str]"], bool]:
-    def func(e: "os.DirEntry[str]") -> bool:
+def name_endswith(prefix: str) -> Callable[[os.DirEntry[str]], bool]:
+    def func(e: os.DirEntry[str]) -> bool:
         return e.name.endswith(prefix)
 
     return func
 
 
-def reverse_name(e: "os.DirEntry[str]") -> str:
+def reverse_name(e: os.DirEntry[str]) -> str:
     return e.name[::-1]
 
 
@@ -498,7 +499,7 @@ def test_iterpath_sort_delete_dirs_onerror_raise(tmp_path: Path, tree01: Path) -
 
 
 def test_iterpath_sort_delete_dirs_onerror_record(tmp_path: Path, tree01: Path) -> None:
-    error_files: List[Path] = []
+    error_files: list[Path] = []
 
     def record(e: OSError) -> None:
         error_files.append(Path(os.fsdecode(e.filename)))

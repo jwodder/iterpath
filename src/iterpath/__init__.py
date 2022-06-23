@@ -10,37 +10,26 @@ for sorting & filtering entries.
 Visit <https://github.com/jwodder/iterpath> for more information.
 """
 
-__version__ = "0.4.0.dev1"
-__author__ = "John Thorvald Wodder II"
-__author_email__ = "iterpath@varonathe.org"
-__license__ = "MIT"
-__url__ = "https://github.com/jwodder/iterpath"
-
+from __future__ import annotations
 from abc import ABC, abstractmethod
 import builtins
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from operator import attrgetter
 import os
 from pathlib import Path
 import re
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AnyStr,
-    Callable,
-    Generic,
-    Iterator,
-    List,
-    Optional,
-    Pattern,
-    Set,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, AnyStr, Generic, Optional, Union, cast
 
 if TYPE_CHECKING:
     from _typeshed import SupportsRichComparison
+
+__version__ = "0.4.0.dev1"
+__author__ = "John Thorvald Wodder II"
+__author_email__ = "iterpath@varonathe.org"
+__license__ = "MIT"
+__url__ = "https://github.com/jwodder/iterpath"
 
 __all__ = [
     "SELECT_DOTS",
@@ -59,26 +48,24 @@ __all__ = [
 @dataclass
 class DirEntries(Generic[AnyStr]):
     dirpath: Path
-    entries: Iterator["os.DirEntry[AnyStr]"]
+    entries: Iterator[os.DirEntry[AnyStr]]
 
 
 def iterpath(
-    dirpath: Union[AnyStr, "os.PathLike[AnyStr]", None] = None,
+    dirpath: AnyStr | os.PathLike[AnyStr] | None = None,
     *,
     topdown: bool = True,
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
-    sort_key: Optional[
-        Callable[["os.DirEntry[AnyStr]"], "SupportsRichComparison"]
-    ] = None,
+    sort_key: Optional[Callable[[os.DirEntry[AnyStr]], SupportsRichComparison]] = None,
     sort_reverse: bool = False,
-    filter: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
-    filter_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
-    filter_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
-    exclude: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
-    exclude_dirs: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
-    exclude_files: Optional[Callable[["os.DirEntry[AnyStr]"], Any]] = None,
+    filter: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    filter_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    filter_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    exclude: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    exclude_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    exclude_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
     onerror: Optional[Callable[[OSError], Any]] = None,
     followlinks: bool = False,
     return_relative: bool = False,
@@ -213,7 +200,7 @@ def iterpath(
     elif exclude is not None:
         exclude_files = exclude
 
-    def filter_entry(e: "os.DirEntry[AnyStr]") -> bool:
+    def filter_entry(e: os.DirEntry[AnyStr]) -> bool:
         if e.is_dir(follow_symlinks=followlinks):
             return (filter_dirs is None or bool(filter_dirs(e))) and (
                 exclude_dirs is None or not exclude_dirs(e)
@@ -223,8 +210,8 @@ def iterpath(
                 exclude_files is None or not exclude_files(e)
             )
 
-    def get_entries(p: Union[AnyStr, "os.PathLike[AnyStr]"]) -> DirEntries[AnyStr]:
-        entries: Iterator["os.DirEntry[AnyStr]"]
+    def get_entries(p: AnyStr | os.PathLike[AnyStr]) -> DirEntries[AnyStr]:
+        entries: Iterator[os.DirEntry[AnyStr]]
         try:
             # Use fspath() here because PyPy on Windows (as of v7.3.3) requires
             # a string:
@@ -290,11 +277,11 @@ class Selector(ABC, Generic[AnyStr]):
     """
 
     @abstractmethod
-    def __call__(self, _entry: "os.DirEntry[AnyStr]") -> bool:
+    def __call__(self, entry: os.DirEntry[AnyStr]) -> bool:
         ...
 
-    def __or__(self, other: "Selector") -> "SelectAny":
-        parts: List[Selector] = []
+    def __or__(self, other: Selector) -> SelectAny:
+        parts: list[Selector] = []
         for s in [self, other]:
             if isinstance(s, SelectAny):
                 parts.extend(s.selectors)
@@ -313,9 +300,9 @@ class SelectAny(Selector[AnyStr]):
     This class is the return type of ``|`` on two selectors.
     """
 
-    selectors: List[Selector[AnyStr]]
+    selectors: list[Selector[AnyStr]]
 
-    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+    def __call__(self, entry: os.DirEntry[AnyStr]) -> bool:
         return any(s(entry) for s in self.selectors)
 
 
@@ -328,12 +315,12 @@ class SelectNames(Selector[AnyStr]):
     """
 
     def __init__(self, *names: AnyStr, case_sensitive: bool = True) -> None:
-        self.names: Set[AnyStr] = set(names)
+        self.names: set[AnyStr] = set(names)
         self.case_sensitive: bool = case_sensitive
         if not case_sensitive:
             self.names = {n.lower() for n in self.names}
 
-    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+    def __call__(self, entry: os.DirEntry[AnyStr]) -> bool:
         name = entry.name
         if not self.case_sensitive:
             name = name.lower()
@@ -365,9 +352,9 @@ class SelectRegex(Selector[AnyStr]):
     regular expression
     """
 
-    pattern: Union[AnyStr, "Pattern[AnyStr]"]
+    pattern: AnyStr | re.Pattern[AnyStr]
 
-    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+    def __call__(self, entry: os.DirEntry[AnyStr]) -> bool:
         return bool(re.search(self.pattern, entry.name))
 
 
@@ -381,7 +368,7 @@ class SelectGlob(Selector[AnyStr]):
 
     pattern: AnyStr
 
-    def __call__(self, entry: "os.DirEntry[AnyStr]") -> bool:
+    def __call__(self, entry: os.DirEntry[AnyStr]) -> bool:
         return fnmatch(entry.name, self.pattern)
 
 

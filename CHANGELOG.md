@@ -1,6 +1,7 @@
 v0.4.0 (in development)
 -----------------------
 - Add `return_relative` argument
+- Drop support for Python 3.6
 
 v0.3.1 (2022-03-12)
 -------------------
