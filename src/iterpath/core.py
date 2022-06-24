@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import sys
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, AnyStr, Generic, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, AnyStr, Generic, Optional, TypeVar, Union, cast
 
 if TYPE_CHECKING:
     if sys.version_info[:2] >= (3, 8):
@@ -15,7 +15,17 @@ if TYPE_CHECKING:
     else:
         from typing_extensions import Protocol
 
-    from _typeshed import SupportsRichComparison
+    T_contra = TypeVar("T_contra", contravariant=True)
+
+    class SupportsLT(Protocol[T_contra]):
+        def __lt__(self, other: T_contra) -> bool:
+            ...
+
+    class SupportsGT(Protocol[T_contra]):
+        def __gt__(self, other: T_contra) -> bool:
+            ...
+
+    SupportsRichComparison = Union[SupportsLT[Any], SupportsGT[Any]]
 
     class ScandirIterator(Protocol[AnyStr], Iterator[os.DirEntry[AnyStr]]):
         def close(self) -> None:
