@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import Mock
 import pytest
 from iterpath import (
@@ -10,6 +11,12 @@ from iterpath import (
     SelectNames,
     SelectRegex,
 )
+
+
+def namedobj(name: str) -> Any:
+    entry = Mock()
+    entry.configure_mock(name=name)
+    return entry
 
 
 @pytest.mark.parametrize(
@@ -29,9 +36,7 @@ from iterpath import (
 )
 def test_select_names(name: str, r: bool) -> None:
     s = SelectNames("foo.txt", "bar.png", ".gh")
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert s(entry) is r
+    assert s(namedobj(name)) is r
 
 
 @pytest.mark.parametrize(
@@ -53,9 +58,7 @@ def test_select_names(name: str, r: bool) -> None:
 )
 def test_select_names_insensitive(name: str, r: bool) -> None:
     s = SelectNames("FOO.txt", "bar.png", ".gh", case_sensitive=False)
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert s(entry) is r
+    assert s(namedobj(name)) is r
 
 
 def test_select_names_repr() -> None:
@@ -95,9 +98,7 @@ def test_select_names_eq() -> None:
 )
 def test_select_glob(name: str, r: bool) -> None:
     s = SelectGlob("*.txt")
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert s(entry) is r
+    assert s(namedobj(name)) is r
 
 
 @pytest.mark.parametrize(
@@ -116,9 +117,7 @@ def test_select_glob(name: str, r: bool) -> None:
 )
 def test_select_regex(name: str, r: bool) -> None:
     s = SelectRegex(r"(abab)+")
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert s(entry) is r
+    assert s(namedobj(name)) is r
 
 
 @pytest.mark.parametrize(
@@ -131,9 +130,7 @@ def test_select_regex(name: str, r: bool) -> None:
     ],
 )
 def test_select_dots(name: str, r: bool) -> None:
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert SELECT_DOTS(entry) is r
+    assert SELECT_DOTS(namedobj(name)) is r
 
 
 @pytest.mark.parametrize(
@@ -156,9 +153,7 @@ def test_select_any(name: str, r: bool) -> None:
     s1 = SelectRegex("^foo")
     s2 = SelectGlob("*.txt")
     sor = s1 | s2
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert sor(entry) is r
+    assert sor(namedobj(name)) is r
 
 
 def test_or() -> None:
@@ -213,9 +208,7 @@ def test_or_or() -> None:
     ],
 )
 def test_select_vcs_dirs(name: str, r: bool) -> None:
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert SELECT_VCS_DIRS(entry) is r
+    assert SELECT_VCS_DIRS(namedobj(name)) is r
 
 
 @pytest.mark.parametrize(
@@ -242,9 +235,7 @@ def test_select_vcs_dirs(name: str, r: bool) -> None:
     ],
 )
 def test_select_vcs_files(name: str, r: bool) -> None:
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert SELECT_VCS_FILES(entry) is r
+    assert SELECT_VCS_FILES(namedobj(name)) is r
 
 
 @pytest.mark.parametrize(
@@ -286,6 +277,4 @@ def test_select_vcs_files(name: str, r: bool) -> None:
     ],
 )
 def test_select_vcs(name: str, r: bool) -> None:
-    entry = Mock()
-    entry.configure_mock(name=name)
-    assert SELECT_VCS(entry) is r
+    assert SELECT_VCS(namedobj(name)) is r
