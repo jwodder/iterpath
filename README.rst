@@ -53,8 +53,9 @@ Iterate over this library's source repository, skipping the ``.git`` and
 ...     else:
 ...         return True
 ...
->>> for p in iterpath(".", sort=True, filter_dirs=filterer):
-...     print(p)
+>>> with iterpath(".", sort=True, filter_dirs=filterer) as ip:
+...     for p in ip:
+...         print(p)
 ...
 .github
 .github/workflows
