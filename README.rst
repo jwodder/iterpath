@@ -84,11 +84,19 @@ The ``iterpath`` module provides a single function, also named ``iterpath``:
 
 .. code:: python
 
-    iterpath(dirpath: Union[AnyStr, os.PathLike[AnyStr]] = os.curdir, **kwargs) -> Iterator[pathlib.Path]
+    iterpath(dirpath: AnyStr | os.PathLike[AnyStr] = os.curdir, **kwargs) -> Iterpath[AnyStr]
 
 Iterate through the file tree rooted at the directory ``dirpath`` (by default,
 the current directory) in depth-first order, yielding the files & directories
-within.
+within as ``pathlib.Path`` instances.
+
+The return value is both an iterator and a context manager.  In order to ensure
+that the internal ``os.scandir()`` iterators are closed properly, either call
+the ``close()`` method when done or else use it as a context manager like so::
+
+    with iterpath(...) as ip:
+        for path in ip:
+            ...
 
 If ``return_relative`` is true, the generated ``Path`` objects will be relative
 to ``dirpath``.  If ``return_relative`` is false (the default) and ``dirpath``
@@ -229,7 +237,7 @@ Selects ``DirEntry``'s whose names match the given fileglob pattern
 
 .. code:: python
 
-    class SelectRegex(pattern: Union[AnyStr, re.Pattern[AnyStr]])
+    class SelectRegex(pattern: AnyStr | re.Pattern[AnyStr])
 
 Selects ``DirEntry``'s whose names match (using ``re.search()``) the given
 regular expression

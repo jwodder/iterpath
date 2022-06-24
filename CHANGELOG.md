@@ -1,6 +1,8 @@
 v0.4.0 (in development)
 -----------------------
 - Add `return_relative` argument
+- The return value of `iterpath()` can now be used as a context manager in
+  order to clean up internal `os.scandir()` iterators
 - Drop support for Python 3.6
 
 v0.3.1 (2022-03-12)
