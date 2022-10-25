@@ -10,7 +10,7 @@ the standard `os.walk()` options, the library also includes options for sorting
 Visit <https://github.com/jwodder/iterpath> for more information.
 """
 
-__version__ = "0.4.0"
+__version__ = "0.5.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "iterpath@varonathe.org"
 __license__ = "MIT"
