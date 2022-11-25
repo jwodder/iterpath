@@ -217,7 +217,7 @@ def iterpath(
     sort: bool = False,
     sort_key: Optional[Callable[[os.DirEntry[AnyStr]], SupportsRichComparison]] = None,
     sort_reverse: bool = False,
-    filter: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
+    filter: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,  # noqa: A002
     filter_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
     filter_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
     exclude: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
