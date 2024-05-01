@@ -15,8 +15,7 @@ class Selector(ABC, Generic[AnyStr]):
     """
 
     @abstractmethod
-    def __call__(self, entry: os.DirEntry[AnyStr]) -> bool:
-        ...
+    def __call__(self, entry: os.DirEntry[AnyStr]) -> bool: ...
 
     def __or__(self, other: Selector) -> SelectAny:
         parts: list[Selector] = []
