@@ -10,10 +10,9 @@ from typing import (
     Any,
     AnyStr,
     Generic,
-    Optional,
     Protocol,
+    TypeAlias,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -28,7 +27,7 @@ class SupportsGT(Protocol[T_contra]):
     def __gt__(self, other: T_contra) -> bool: ...
 
 
-SupportsRichComparison = Union[SupportsLT[Any], SupportsGT[Any]]
+SupportsRichComparison: TypeAlias = SupportsLT[Any] | SupportsGT[Any]
 
 
 class ScandirIterator(Protocol[AnyStr], Iterator[os.DirEntry[AnyStr]]):
@@ -105,20 +104,20 @@ class Iterpath(Generic[AnyStr]):
     sort: bool
     sort_key: Callable[[os.DirEntry[AnyStr]], SupportsRichComparison]
     sort_reverse: bool
-    onerror: Optional[Callable[[OSError], Any]]
+    onerror: Callable[[OSError], Any] | None
     followlinks: bool
     return_relative: bool
-    dirstack: Optional[list[DirEntryIter[AnyStr]]] = None
-    pending: Optional[os.DirEntry[AnyStr]] = None
+    dirstack: list[DirEntryIter[AnyStr]] | None = None
+    pending: os.DirEntry[AnyStr] | None = None
 
     def __enter__(self) -> Iterpath:
         return self
 
     def __exit__(
         self,
-        _exc_type: Optional[type[BaseException]],
-        _exc_val: Optional[BaseException],
-        _exc_tb: Optional[TracebackType],
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
     ) -> None:
         self.close()
 
@@ -218,15 +217,15 @@ def iterpath(
     include_root: bool = False,
     dirs: bool = True,
     sort: bool = False,
-    sort_key: Optional[Callable[[os.DirEntry[AnyStr]], SupportsRichComparison]] = None,
+    sort_key: Callable[[os.DirEntry[AnyStr]], SupportsRichComparison] | None = None,
     sort_reverse: bool = False,
-    filter: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,  # noqa: A002
-    filter_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
-    filter_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
-    exclude: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
-    exclude_dirs: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
-    exclude_files: Optional[Callable[[os.DirEntry[AnyStr]], Any]] = None,
-    onerror: Optional[Callable[[OSError], Any]] = None,
+    filter: Callable[[os.DirEntry[AnyStr]], Any] | None = None,  # noqa: A002
+    filter_dirs: Callable[[os.DirEntry[AnyStr]], Any] | None = None,
+    filter_files: Callable[[os.DirEntry[AnyStr]], Any] | None = None,
+    exclude: Callable[[os.DirEntry[AnyStr]], Any] | None = None,
+    exclude_dirs: Callable[[os.DirEntry[AnyStr]], Any] | None = None,
+    exclude_files: Callable[[os.DirEntry[AnyStr]], Any] | None = None,
+    onerror: Callable[[OSError], Any] | None = None,
     followlinks: bool = False,
     return_relative: bool = False,
 ) -> Iterpath[AnyStr]:
@@ -340,7 +339,7 @@ def iterpath(
     """
 
     if dirpath is None:
-        dirpath = cast(Union[AnyStr, "os.PathLike[AnyStr]"], os.curdir)
+        dirpath = cast(AnyStr | os.PathLike[AnyStr], os.curdir)
         pdirpath = Path()
     else:
         pdirpath = Path(os.fsdecode(dirpath))
