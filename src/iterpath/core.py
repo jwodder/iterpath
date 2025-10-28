@@ -5,33 +5,40 @@ from dataclasses import dataclass
 from operator import attrgetter
 import os
 from pathlib import Path
-import sys
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, AnyStr, Generic, Optional, TypeVar, Union, cast
+from typing import (
+    Any,
+    AnyStr,
+    Generic,
+    Optional,
+    Protocol,
+    TypeVar,
+    Union,
+    cast,
+)
 
-if TYPE_CHECKING:
-    if sys.version_info[:2] >= (3, 8):
-        from typing import Protocol
-    else:
-        from typing_extensions import Protocol
+T_contra = TypeVar("T_contra", contravariant=True)
 
-    T_contra = TypeVar("T_contra", contravariant=True)
 
-    class SupportsLT(Protocol[T_contra]):
-        def __lt__(self, other: T_contra) -> bool: ...
+class SupportsLT(Protocol[T_contra]):
+    def __lt__(self, other: T_contra) -> bool: ...
 
-    class SupportsGT(Protocol[T_contra]):
-        def __gt__(self, other: T_contra) -> bool: ...
 
-    SupportsRichComparison = Union[SupportsLT[Any], SupportsGT[Any]]
+class SupportsGT(Protocol[T_contra]):
+    def __gt__(self, other: T_contra) -> bool: ...
 
-    class ScandirIterator(Protocol[AnyStr], Iterator[os.DirEntry[AnyStr]]):
-        def close(self) -> None: ...
 
-    class DirEntryIter(Protocol[AnyStr], Iterator[os.DirEntry[AnyStr]]):
-        dirpath: Path
+SupportsRichComparison = Union[SupportsLT[Any], SupportsGT[Any]]
 
-        def close(self) -> None: ...
+
+class ScandirIterator(Protocol[AnyStr], Iterator[os.DirEntry[AnyStr]]):
+    def close(self) -> None: ...
+
+
+class DirEntryIter(Protocol[AnyStr], Iterator[os.DirEntry[AnyStr]]):
+    dirpath: Path
+
+    def close(self) -> None: ...
 
 
 @dataclass
